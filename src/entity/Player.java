@@ -17,8 +17,6 @@ public class Player extends Entity{
     int standCounter = 0;
     public boolean attackCanceled = false;
     public boolean lightUpdated = false;
-    int walkFrameCount = 8;   // 8 walking frames
-    int idleFrameCount = 4;   // 4 idle frames
     int maxSpriteFrames = 8;
 
     BufferedImage[] up = loadSpriteSheet("/player/UpRun", 16, 16, 8, gp.tileSize);
@@ -61,7 +59,7 @@ public class Player extends Entity{
 //        worldY = gp.tileSize * 9;
 //        gp.currentMap = 3;
 
-        defaultSpeed = 3;
+        defaultSpeed = 4;
         speed = defaultSpeed;
         direction = "down";
 
@@ -121,10 +119,32 @@ public class Player extends Entity{
         inventory.clear(); //cuz if game restarts inventory must be cleared first
         inventory.add(currentWeapon);
         inventory.add(currentShield);
-        /*inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Key(gp));
-        inventory.add(new OBJ_Key(gp));
 
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Boots(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Potion_Red(gp));
+
+
+
+
+
+        /*
         inventory.add(new OBJ_Lantern(gp));
         inventory.add(new OBJ_Axe(gp));
         inventory.add(new OBJ_Pickaxe(gp));*/
@@ -418,7 +438,7 @@ public class Player extends Entity{
             // ANIMATION
             // ANIMATION (8 frames)
             spriteCounter++;
-            if(spriteCounter > 5) {   // adjust this number for speed (lower = faster)
+            if(spriteCounter > 6) {   // adjust this number for speed (lower = faster)
                 spriteNum++;
                 if(spriteNum > maxSpriteFrames) {
                     spriteNum = 1;
@@ -477,7 +497,7 @@ public class Player extends Entity{
         if(life > maxLife) life = maxLife;
         if(mana > maxMana) mana = maxMana;
 
-        if(!keyH.godModeOn && life <= 0) {
+        if(!keyH.cheat && life <= 0) {
             gp.gameState = gp.gameOverState;
             gp.ui.commandNum = -1;
             gp.stopMusic();
@@ -644,6 +664,7 @@ public class Player extends Entity{
          }
     }
     public void selectItem() {
+
         int itemIndex = gp.ui.getItemIndexOnSlot(gp.ui.playerSlotCol, gp.ui.playerSlotRow);
         if(itemIndex < inventory.size())
         {

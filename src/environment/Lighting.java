@@ -33,7 +33,8 @@ public class Lighting {
 
         if(gp.player.currentLight == null)
         {
-            g2.setColor(new Color (0,0,0.08f,0.97f));
+            g2.setColor(new Color (0,0,0.08f,0.90f));
+
         }
         else
         {
@@ -42,8 +43,8 @@ public class Lighting {
             int centerY = gp.player.screenY + (gp.tileSize)/2;
 
             //Create a gradation effect within the light circle
-            Color color[] = new Color[12];
-            float fraction[] = new float[12];
+            Color[] color = new Color[12];
+            float[] fraction = new float[12];
             color[0] = new Color(0,0,0.08f,0.1f);    //Center
             color[1] = new Color(0,0,0.08f,0.42f);
             color[2] = new Color(0,0,0.08f,0.52f);
@@ -89,7 +90,7 @@ public class Lighting {
     }
     public void update()
     {
-        if(gp.player.lightUpdated == true)
+        if(gp.player.lightUpdated)
         {
             setLightSource();
             gp.player.lightUpdated = false;
@@ -99,7 +100,7 @@ public class Lighting {
         if(dayState == day)
         {
             dayCounter++;
-            if(dayCounter > 3600) //1 min day
+            if(dayCounter > 30000) //1 min day
             {
                 dayState = dusk;
                 dayCounter = 0;
@@ -107,7 +108,7 @@ public class Lighting {
         }
         if(dayState == dusk)
         {
-            filterAlpha += 0.0005f;   //0.0005f x 2000 = 1f, 2000/60 = 32 seconds
+            filterAlpha += 0.000185185f;   //      1f / 5400 = 0.000185185f = 1 min 30 seconds
             if(filterAlpha > 1f)
             {
                 filterAlpha = 1f;
@@ -117,7 +118,7 @@ public class Lighting {
         if(dayState == night)
         {
             dayCounter++;
-            if(dayCounter > 3600) //1 min night
+            if(dayCounter > 30000) //1 min night
             {
                 dayState = dawn;
                 dayCounter = 0;
@@ -125,6 +126,7 @@ public class Lighting {
         }
         if(dayState == dawn)
         {
+
             filterAlpha -= 0.0005f;   //0.0005f x 2000 = 1f, 2000/60 = 32 seconds
             if(filterAlpha < 0)
             {
@@ -156,6 +158,6 @@ public class Lighting {
         }
         g2.setColor(Color.white);
         g2.setFont(g2.getFont().deriveFont(50f));
-        g2.drawString(situation,800,500);
+        g2.drawString(situation,1150,740);
     }
 }

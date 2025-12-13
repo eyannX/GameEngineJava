@@ -9,7 +9,7 @@ public class KeyHandler implements KeyListener {
     public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed;
     //DEBUG
     public boolean showDebugText = false;
-    public boolean godModeOn = false;
+    public boolean cheat = false;
 
     @Override
     public void keyTyped(KeyEvent e) {

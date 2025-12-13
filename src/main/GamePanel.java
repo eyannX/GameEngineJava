@@ -20,9 +20,9 @@ import java.util.Comparator;
 public class GamePanel extends JPanel implements Runnable{
     //SCREEN SETTINGS
     final int originalTileSize = 16; // 16*16  tile. default
-    final int scale = 3; // 16*3 scale
+    final int scale = 4; // 16*3 scale
 
-    public final int tileSize = originalTileSize * scale; // 48*48 tile // public cuz we use it in Player Class
+    public final int tileSize = originalTileSize * scale; // 64*64 tile
     public final int maxScreenCol = 20; // 4:3 window
     public final int maxScreenRow = 12;
     public final int screenWidth = tileSize * maxScreenCol;  //48*20 = 960 pixels
@@ -369,7 +369,7 @@ public class GamePanel extends JPanel implements Runnable{
                 y+= lineHeight;
                 g2.drawString("Draw time: " + passed,x,y);
                 y+= lineHeight;
-                g2.drawString("God Mode: " + keyH.godModeOn, x, y);
+                g2.drawString("cheat: " + keyH.cheat, x, y);
 
             }
         }
