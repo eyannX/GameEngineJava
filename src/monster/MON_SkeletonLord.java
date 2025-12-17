@@ -6,7 +6,7 @@ import main.GamePanel;
 import object.OBJ_Dinar;
 import object.OBJ_Door_Iron;
 import object.OBJ_Heart;
-import object.OBJ_ManaCrystal;
+import object.OBJ_HungerBar;
 
 import java.util.Random;
 
@@ -175,7 +175,7 @@ public class MON_SkeletonLord extends Entity {
         }
         if(i >= 75 && i < 100)
         {
-            dropItem(new OBJ_ManaCrystal(gp));
+            dropItem(new OBJ_HungerBar(gp));
         }
     }
 }

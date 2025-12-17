@@ -3,12 +3,12 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
-public class OBJ_Potion_Red extends Entity {
+public class OBJ_Croissant extends Entity {
 
     GamePanel gp;
-    public static final String objName = "Red Potion";
+    public static final String objName = "croissant";
 
-    public OBJ_Potion_Red(GamePanel gp) {
+    public OBJ_Croissant(GamePanel gp) {
         super(gp);
 
         this.gp = gp;
@@ -16,7 +16,7 @@ public class OBJ_Potion_Red extends Entity {
         type = type_consumable;
         name = objName;
         value = 5;
-        down1 = setup("/objects/potion_red", gp.tileSize, gp.tileSize);
+        down1 = setup("/objects/croissant", gp.tileSize, gp.tileSize);
         description = "[" + name + "]\nHeals your life by " + value + ".";
         price = 50;
         stackable = true;
@@ -25,12 +25,16 @@ public class OBJ_Potion_Red extends Entity {
     }
     public void setDialogue()
     {
-        dialogues[0][0] = "You drink the " + name + "!\n" + "Your life has been recovered by " + value + ".";
+        dialogues[0][0] = "You Ate the " + name + "!\n" + "Your life has been recovered by " + value + "\n your hunger has been reset";
     }
     public boolean use(Entity entity)
     {
         startDialogue(this,0);
-        entity.life += value;
+
+        entity.mana += 2;
+        if(entity.mana <= 8){
+            entity.life += value;
+        }
         gp.playSE(2);
         return true;
     }

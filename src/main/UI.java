@@ -3,7 +3,7 @@ package main;
 import entity.Entity;
 import object.OBJ_Dinar;
 import object.OBJ_Heart;
-import object.OBJ_ManaCrystal;
+import object.OBJ_HungerBar;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -58,7 +58,7 @@ public class UI {
         heart_full = heart.image;
         heart_half = heart.image2;
         heart_blank = heart.image3;
-        Entity crystal = new OBJ_ManaCrystal(gp);
+        Entity crystal = new OBJ_HungerBar(gp);
         crystal_full = crystal.image;
         crystal_blank = crystal.image2;
         Entity bronzeCoin = new OBJ_Dinar(gp);
@@ -619,7 +619,7 @@ public class UI {
         int y = gp.tileSize/2;
         int i = 0;
         int iconSize = 32;
-        int manaStartX = (gp.tileSize/2) - 5;
+        int manaStartX = (gp.tileSize/2);
         int manaStartY = 0;
 
         //DRAW MAX LIFE (BLANK)
@@ -665,9 +665,9 @@ public class UI {
         i = 0;
         while(i < gp.player.maxMana)
         {
-            g2.drawImage(crystal_blank,x,y, iconSize, iconSize, null);
+            g2.drawImage(crystal_blank,x ,y, iconSize, iconSize, null);
             i++;
-            x += 20;
+            x += 25;
 
             if(i % 10 == 0)
             {
@@ -684,7 +684,7 @@ public class UI {
         {
             g2.drawImage(crystal_full,x,y,iconSize,iconSize,null);
             i++;
-            x += 20;
+            x += 25;
             if(i % 10 == 0)
             {
                 x = manaStartX;
@@ -698,14 +698,14 @@ public class UI {
         {
             Entity monster = gp.monster[gp.currentMap][i];
 
-            if(monster != null && monster.inCamera() == true)
+            if(monster != null && monster.inCamera())
             {
-                if(monster.hpBarOn == true && monster.boss == false)
+                if(monster.hpBarOn && !monster.boss)
                 {
-                    double oneScale = (double)gp.tileSize/monster.maxLife; // (bar lenght / maxlife) Ex: if monster hp = 2, tilesize = 48px. So, 1 hp = 24px
+                    double oneScale = (double)gp.tileSize/monster.maxLife; // (bar length / maxlife) Ex: if monster hp = 2, tilesize = 48px. So, 1 hp = 24px
                     double hpBarValue = oneScale * monster.life;
 
-                    if(hpBarValue < 0) //Ex: You attack 5 hp to monster which has 3 hp. Monster's hp will be -2 and bar will ofset to left. To avoid that check if hpBarValue less than 0.
+                    if(hpBarValue < 0)//Ex: You attack 5 hp to monster which has 3 hp. Monster's hp will be -2 and bar will offset to left. To avoid that check if hpBarValue less than 0.
                     {
                         hpBarValue = 0;
                     }
@@ -723,7 +723,7 @@ public class UI {
                         monster.hpBarOn = false;
                     }
                 }
-                else if(monster.boss == true)
+                else if(monster.boss)
                 {
                     double oneScale = (double)gp.tileSize*8/monster.maxLife; // (bar lenght / maxlife) Ex: if monster hp = 2, tilesize = 48px. So, 1 hp = 24px
                     double hpBarValue = oneScale * monster.life;

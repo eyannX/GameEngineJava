@@ -20,6 +20,6 @@ public class OBJ_Sword_Normal extends Entity {
         price = 30;
         knockBackPower = 3;
         motion1_duration = 5;
-        motion2_duration = 25;
+        motion2_duration = 15;
     }
 }

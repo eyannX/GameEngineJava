@@ -18,6 +18,12 @@ public class Player extends Entity{
     public boolean attackCanceled = false;
     public boolean lightUpdated = false;
     int maxSpriteFrames = 8;
+    int idleSpriteNum = 1;        // 1 or 2
+    int idleCounter = 0;
+    final int idleDelay = 30;     // higher = slower (30–60 feels good)
+    int standStillCounter = 0;
+    final int IDLE_START_DELAY = 200; // frames before idle anim starts
+    int seCounter = 0;
 
     BufferedImage[] up = loadSpriteSheet("/player/UpRun", 16, 16, 8, gp.tileSize);
     BufferedImage[] down = loadSpriteSheet("/player/DownRun", 16, 16, 8, gp.tileSize);
@@ -33,10 +39,10 @@ public class Player extends Entity{
         screenY = gp.screenHeight/2- (gp.tileSize/2);
 
         solidArea = new Rectangle();
-        solidArea.x = 10;
-        solidArea.y = 15;
-        solidArea.width = 25;
-        solidArea.height = 25;
+        solidArea.x = 22;
+        solidArea.y = 28;
+        solidArea.width = 18;
+        solidArea.height = 32;
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 
@@ -65,9 +71,9 @@ public class Player extends Entity{
 
         //PLAYER STATUS
         level = 1;
-        maxLife = 10;
+        maxLife = 16;
         life = maxLife;
-        maxMana = 8;
+        maxMana = 10;
         mana = maxMana;
         ammo = 10;
         strength = 1;           // The more strength he has, the more damage he gives.
@@ -86,6 +92,7 @@ public class Player extends Entity{
 
         getImage();
         getAttackImage();
+        getIdleImage();
         getGuardImage();
         setItems();
         //setDialogue();
@@ -120,25 +127,25 @@ public class Player extends Entity{
         inventory.add(currentWeapon);
         inventory.add(currentShield);
 
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
 
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
 
-        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Croissant(gp));
         inventory.add(new OBJ_Boots(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
-        inventory.add(new OBJ_Potion_Red(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_Croissant(gp));
 
 
 
@@ -256,6 +263,21 @@ public class Player extends Entity{
         right7 = right[right_i];
         right_i++;
         right8 = right[right_i];
+
+    }
+    public void getIdleImage(){
+
+        up_idle1 = setup("/player/up_idle1", gp.tileSize, gp.tileSize);
+        up_idle2 = setup("/player/up_idle2", gp.tileSize, gp.tileSize);
+
+        down_idle1 = setup("/player/down_idle1", gp.tileSize, gp.tileSize);
+        down_idle2 = setup("/player/down_idle2", gp.tileSize, gp.tileSize);
+
+        left_idle1 = setup("/player/left_idle1", gp.tileSize, gp.tileSize);
+        left_idle2 = setup("/player/left_idle2", gp.tileSize, gp.tileSize);
+
+        right_idle1 = setup("/player/right_idle1", gp.tileSize, gp.tileSize);
+        right_idle2 = setup("/player/right_idle2", gp.tileSize, gp.tileSize);
 
     }
     public void getSleepingImage(BufferedImage image) {
@@ -377,6 +399,10 @@ public class Player extends Entity{
 
         if(moving || keyH.enterPressed) {
 
+
+            standStillCounter = 0;
+
+
             // NEW: 2-axis movement vector
             double dx = 0;
             double dy = 0;
@@ -421,7 +447,6 @@ public class Player extends Entity{
                 worldY +=  (dy * speed) ;
             }
 
-            // =====================
             // ATTACK KEY
             // =====================
             if(keyH.enterPressed && !attackCanceled) {
@@ -436,9 +461,8 @@ public class Player extends Entity{
             guardCounter = 0;
 
             // ANIMATION
-            // ANIMATION (8 frames)
             spriteCounter++;
-            if(spriteCounter > 6) {   // adjust this number for speed (lower = faster)
+            if(spriteCounter > 4) {   // adjust this number for speed (lower = faster)
                 spriteNum++;
                 if(spriteNum > maxSpriteFrames) {
                     spriteNum = 1;
@@ -448,19 +472,29 @@ public class Player extends Entity{
 
         }
         else {
-            // NOT MOVING — Idle animation
-            standCounter++;
-            if(standCounter == 20) {
-                spriteNum = 1;
-                standCounter = 0;
+            standStillCounter++;
+
+            if(standStillCounter >= IDLE_START_DELAY) {
+                idleCounter++;
+
+                if(idleCounter > idleDelay) {
+                    idleSpriteNum++;
+                    if(idleSpriteNum > 2) {
+                        idleSpriteNum = 1;
+                    }
+                    idleCounter = 0;
+                }
+
             }
+
+
             guarding = false;
             guardCounter = 0;
         }
 
-        // =====================
+
+
         // PROJECTILE SHOOTING
-        // =====================
         if(keyH.shotKeyPressed && !projectile.alive &&
                 shotAvailableCounter == 30 &&
                 projectile.haveResource(this))
@@ -483,7 +517,7 @@ public class Player extends Entity{
         // =====================
         if(invincible) {
             invincibleCounter++;
-            if(invincibleCounter > 60) {
+            if(invincibleCounter > 10) {
                 invincible = false;
                 transparent = false;
                 invincibleCounter = 0;
@@ -556,8 +590,10 @@ public class Player extends Entity{
             gp.npc[gp.currentMap][i].move(direction);
         }
     }
-    public void contactMonster(int i) // CollisionChecker Method Implement //checkPlayer() : Checks who touches to player //checkEntity() : Checks if player touches to an entity;
-    {
+    public void contactMonster(int i) {
+        // CollisionChecker Method Implement //checkPlayer() : Checks who touches to player
+        // checkEntity() : Checks if player touches to an entity;
+
         if(i != 999)
         {
             if(!invincible && !gp.monster[gp.currentMap][i].dying)
@@ -762,91 +798,123 @@ public class Player extends Entity{
 
 
     public void draw(Graphics2D g2) {
+
         BufferedImage image = null;
         int tempScreenX = screenX;
         int tempScreenY = screenY;
 
+        // Determine if player is moving (used only for draw decision)
+        boolean moving =
+                keyH.upPressed || keyH.downPressed ||
+                        keyH.leftPressed || keyH.rightPressed;
 
         // PICK SPRITE ---------------------------------------------------
         switch (direction)
         {
             case "up":
-                if (!attacking)
-                    image = up[spriteNum - 1];   // <-- auto picks frame 1–8
-
-                else {
+                if(attacking) {
                     tempScreenY = screenY - gp.tileSize;
                     image = (spriteNum == 1 ? attackUp1 : attackUp2);
                 }
+                else if(moving) {
+                    image = up[spriteNum - 1];
+                }
+                else {
+                    image = (idleSpriteNum == 1 ? up_idle1 : up_idle2);
+                }
 
-                if (guarding) image = guardUp;
+                if(guarding) image = guardUp;
                 break;
 
             case "down":
-                if (!attacking)
-                    image = down[spriteNum - 1];
-
-                else
+                if(attacking) {
                     image = (spriteNum == 1 ? attackDown1 : attackDown2);
+                }
+                else if(moving) {
+                    image = down[spriteNum - 1];
+                }
+                else {
+                    image = (idleSpriteNum == 1 ? down_idle1 : down_idle2);
+                }
 
-                if (guarding) image = guardDown;
+                if(guarding) image = guardDown;
                 break;
 
             case "left":
-                if (!attacking)
-                    image = left[spriteNum - 1];
-
-                else {
+                if(attacking) {
                     tempScreenX = screenX - gp.tileSize;
                     image = (spriteNum == 1 ? attackLeft1 : attackLeft2);
                 }
+                else if(moving) {
+                    image = left[spriteNum - 1];
+                }
+                else {
+                    image = (idleSpriteNum == 1 ? left_idle1 : left_idle2);
+                }
 
-                if (guarding) image = guardLeft;
+                if(guarding) image = guardLeft;
                 break;
 
             case "right":
-                if (!attacking)
-                    image = right[spriteNum - 1];
-
-                else
+                if(attacking) {
                     image = (spriteNum == 1 ? attackRight1 : attackRight2);
+                }
+                else if(moving) {
+                    image = right[spriteNum - 1];
+                }
+                else {
+                    image = (idleSpriteNum == 1 ? right_idle1 : right_idle2);
+                }
 
-                if (guarding) image = guardRight;
+                if(guarding) image = guardRight;
                 break;
         }
 
-        //Make player half-transparent (%40) when invincible
-        if(transparent)
-        {
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,0.4f));
-        }
-        if(drawing) //for boss cutscene making player invisible to move camera.(Cuz camera movement based on player). Only draw the PlayerDummy
-        {
-            g2.drawImage(image,tempScreenX,tempScreenY, null);
+        // INVINCIBILITY TRANSPARENCY
+        if(transparent) {
+            g2.setComposite(AlphaComposite.getInstance(
+                    AlphaComposite.SRC_OVER, 0.4f));
         }
 
+        if(drawing) {
+            g2.drawImage(image, tempScreenX, tempScreenY, null);
+        }
 
-        //Reset graphics opacity / alpha
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,1f));
+        // RESET ALPHA
+        g2.setComposite(AlphaComposite.getInstance(
+                AlphaComposite.SRC_OVER, 1f));
 
-        //DEBUG
-        /*g2.setFont(new Font("Arial",Font.PLAIN, 26));
+        // DEBUG ---------------------------------------------------------
+        g2.setFont(new Font("Arial", Font.PLAIN, 26));
         g2.setColor(Color.white);
-        g2.drawString("Invincible:" + invincibleCounter, 10,400);
+        g2.drawString("Invincible:" + invincibleCounter, 10, 400);
 
         g2.setColor(Color.RED);
-        g2.drawRect(screenX + solidArea.x, screenY + solidArea.y, solidArea.width, solidArea.height); //PLAYER COLLISION CHECKER.RED RECTANGLE.
+        g2.drawRect(
+                screenX + solidArea.x,
+                screenY + solidArea.y,
+                solidArea.width,
+                solidArea.height
+        );
 
         tempScreenX = screenX + solidArea.x;
         tempScreenY = screenY + solidArea.y;
+
         switch(direction) {
-            case "up": tempScreenY = screenY - attackArea.height; break;
-            case "down": tempScreenY = screenY + gp.tileSize; break;
-            case "left": tempScreenX = screenX - attackArea.width; break;
+            case "up":    tempScreenY = screenY - attackArea.height; break;
+            case "down":  tempScreenY = screenY + gp.tileSize; break;
+            case "left":  tempScreenX = screenX - attackArea.width; break;
             case "right": tempScreenX = screenX + gp.tileSize; break;
         }
+
         g2.setColor(Color.red);
         g2.setStroke(new BasicStroke(1));
-        g2.drawRect(tempScreenX, tempScreenY, attackArea.width, attackArea.height);*/
+        g2.drawRect(
+                tempScreenX,
+                tempScreenY,
+                attackArea.width,
+                attackArea.height
+        );
     }
+
 }

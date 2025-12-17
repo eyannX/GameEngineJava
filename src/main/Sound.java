@@ -16,7 +16,7 @@ public class Sound {
     public Sound() {
 
         soundURL[0] = getClass().getResource("/sound/WeCameNasheed1.wav");
-        soundURL[1] = getClass().getResource("/sound/coin.wav");
+        soundURL[1] = getClass().getResource("/sound/pop.wav");
         soundURL[2] = getClass().getResource("/sound/powerup.wav");
         soundURL[3] = getClass().getResource("/sound/unlock.wav");
         soundURL[4] = getClass().getResource("/sound/fanfare.wav");
@@ -38,6 +38,8 @@ public class Sound {
         soundURL[20] = getClass().getResource("/sound/chipwall.wav");
         soundURL[21] = getClass().getResource("/sound/dooropen.wav");
         soundURL[22] = getClass().getResource("/sound/FinalBattle.wav");
+        soundURL[23] = getClass().getResource("/sound/Footstep_Left_Grass.wav");
+        soundURL[24] = getClass().getResource("/sound/Footstep_Right_Grass.wav");
 
 
     }
