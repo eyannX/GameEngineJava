@@ -6,7 +6,7 @@ import object.*;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-
+import java.util.Random;
 
 
 public class Player extends Entity{
@@ -23,7 +23,7 @@ public class Player extends Entity{
     final int idleDelay = 30;     // higher = slower (30–60 feels good)
     int standStillCounter = 0;
     final int IDLE_START_DELAY = 200; // frames before idle anim starts
-    int seCounter = 0;
+    int counter = 0;
 
     BufferedImage[] up = loadSpriteSheet("/player/UpRun", 16, 16, 8, gp.tileSize);
     BufferedImage[] down = loadSpriteSheet("/player/DownRun", 16, 16, 8, gp.tileSize);
@@ -73,10 +73,11 @@ public class Player extends Entity{
         level = 1;
         maxLife = 16;
         life = maxLife;
-        maxMana = 10;
-        mana = maxMana;
+        maxHunger = 10;
+        currentHunger = maxHunger;
         ammo = 10;
-        strength = 1;           // The more strength he has, the more damage he gives.
+        defaultStrength = 1;
+        strength = defaultStrength;           // The more strength he has, the more damage he gives.
         dexterity = 1;          // The more dexterity he has, the less damage he receives.
         exp = 0;
         nextLevelExp = 4;
@@ -92,9 +93,9 @@ public class Player extends Entity{
 
         getImage();
         getAttackImage();
-        getIdleImage();
         getGuardImage();
         setItems();
+        getIdleImage();
         //setDialogue();
     }
     public void setDefaultPositions() {
@@ -111,8 +112,9 @@ public class Player extends Entity{
     public void restoreStatus() {
 
         life = maxLife;
-        mana = maxMana;
+        currentHunger = maxHunger;
         speed = defaultSpeed;
+        playerInvincible = false;
         invincible = false;
         transparent = false;
         attacking = false;
@@ -282,14 +284,18 @@ public class Player extends Entity{
     }
     public void getSleepingImage(BufferedImage image) {
 
-        up1 = image;
-        up2 = image;
-        down1 = image;
-        down2 = image;
-        left1 = image;
-        left2 = image;
-        right1 = image;
-        right2 = image;
+
+        up_idle1 = image;
+        up_idle2 = image;
+
+        down_idle1 = image;
+        down_idle2 = image;
+
+        left_idle1 = image;
+        left_idle2 = image;
+
+        right_idle1 = image;
+        right_idle2 = image;
     }
     public void getAttackImage() {
 
@@ -335,7 +341,6 @@ public class Player extends Entity{
         guardLeft = setup("/player/boy_guard_left",gp.tileSize,gp.tileSize);
         guardRight = setup("/player/boy_guard_right",gp.tileSize,gp.tileSize);
     }
-
     public void update() {
 
         // =====================
@@ -399,7 +404,7 @@ public class Player extends Entity{
 
         if(moving || keyH.enterPressed) {
 
-
+            movingCounter++;
             standStillCounter = 0;
 
 
@@ -466,12 +471,29 @@ public class Player extends Entity{
                 spriteNum++;
                 if(spriteNum > maxSpriteFrames) {
                     spriteNum = 1;
+
                 }
                 spriteCounter = 0;
+
             }
+
+            //moving SE
+            if(movingCounter >= 22){
+                movingCounter = 0;
+                gp.playSE(23);
+            }
+
+            // you have to eat every 5 min of moving
+            isHungry++;
+            if(isHungry >= 1800){
+                isHungry = 0;
+                currentHunger -= 1;
+            }
+
 
         }
         else {
+            //idle animation
             standStillCounter++;
 
             if(standStillCounter >= IDLE_START_DELAY) {
@@ -486,10 +508,16 @@ public class Player extends Entity{
                 }
 
             }
-
-
             guarding = false;
             guardCounter = 0;
+
+
+            // you have to eat every day at least once to survive
+            isHungry++;
+            if(isHungry >= 3600){
+                isHungry = 0;
+                currentHunger -= 1;
+            }
         }
 
 
@@ -512,15 +540,24 @@ public class Player extends Entity{
             gp.playSE(10);
         }
 
-        // =====================
+
         // INVINCIBILITY TIMER
-        // =====================
         if(invincible) {
             invincibleCounter++;
-            if(invincibleCounter > 10) {
+            if(invincibleCounter > 2) {
                 invincible = false;
                 transparent = false;
                 invincibleCounter = 0;
+            }
+        }
+
+        //player has more invincibility than monsters
+        if(playerInvincible){
+            playerInvincibleCounter++;
+            if(playerInvincibleCounter > 60) {
+                playerInvincible = false;
+                transparent = false;
+                playerInvincibleCounter = 0;
             }
         }
 
@@ -529,7 +566,7 @@ public class Player extends Entity{
         }
 
         if(life > maxLife) life = maxLife;
-        if(mana > maxMana) mana = maxMana;
+        if(currentHunger > maxHunger) currentHunger = maxHunger;
 
         if(!keyH.cheat && life <= 0) {
             gp.gameState = gp.gameOverState;
@@ -537,43 +574,79 @@ public class Player extends Entity{
             gp.stopMusic();
             gp.playSE(12);
         }
+
+
+        if (life < maxLife && currentHunger >= maxHunger -2) {
+
+            regenCounter++;
+            if (regenCounter >= 120) { // ~2 seconds at 60 FPS
+
+                life++;
+
+                // Consume saturation first
+                if (saturation > 0) {
+                    saturation -= 1;
+                } else {
+                    currentHunger--;
+                }
+                regenCounter = 0;
+            }
+        } else {
+            regenCounter = 0;
+        }
+
+
+        if (currentHunger == 0) {
+
+            isStarving = true;
+            speed = 2;
+            strength -= 1;
+
+            starvationCounter++;
+            if (starvationCounter > 180) {
+                life--;
+                starvationCounter = 0;
+                int sound = new Random().nextInt(3);
+                gp.playSE(27 + sound);
+            }
+        }
+        else if(currentHunger > 0){
+            speed = defaultSpeed;
+            isStarving = false;
+            strength = defaultStrength;
+        }
     }
-
-
     public void pickUpObject(int i) {
 
         if(i != 999) {
             // PICKUP ONLY ITEMS
-            if(gp.obj[gp.currentMap][i].type == type_pickupOnly)
-            {
+            if(gp.obj[gp.currentMap][i].type == type_pickupOnly ) {
                 gp.obj[gp.currentMap][i].use(this);
                 gp.obj[gp.currentMap][i] = null;
             }
             //OBSTACLE
-            else if(gp.obj[gp.currentMap][i].type == type_obstacle)
-            {
-                if(keyH.enterPressed)
-                {
+            else if(gp.obj[gp.currentMap][i].type == type_obstacle) {
+                if(keyH.enterPressed) {
                     attackCanceled = true;
                     gp.obj[gp.currentMap][i].interact();
                 }
             }
             // INVENTORY ITEMS
-            else
-            {
+            else{
                 String text;
                 if(canObtainItem(gp.obj[gp.currentMap][i])) //if inventory is not full can pick up object
                 {
                     //inventory.add(gp.obj[gp.currentMap][i]); //canObtainItem() already adds item
                     gp.playSE(1);
                     text = "Got a " + gp.obj[gp.currentMap][i].name + "!";
+                    gp.obj[gp.currentMap][i] = null;
                 }
-                else
-                {
-                    text = "You cannot carry any more";
+                else{
+
+                    text = "Inventory full!";
                 }
                 gp.ui.addMessage(text);
-                gp.obj[gp.currentMap][i] = null;
+
             }
         }
     }
@@ -594,51 +667,53 @@ public class Player extends Entity{
         // CollisionChecker Method Implement //checkPlayer() : Checks who touches to player
         // checkEntity() : Checks if player touches to an entity;
 
-        if(i != 999)
-        {
-            if(!invincible && !gp.monster[gp.currentMap][i].dying)
-            {
-                gp.playSE(6);  //receive damage.wav
+        if(i != 999) {
+            if(!playerInvincible && !gp.monster[gp.currentMap][i].dying && hostile) {
+
+                //Random sound effect
+                int sound = new Random().nextInt(3);
+                gp.playSE(27 + sound);
 
                 int damage = gp.monster[gp.currentMap][i].attack - defense;
-                if(damage < 1)
-                {
+
+                if(damage < 1) {
                     damage = 1;
                 }
+
                 life -= damage;
-                invincible = true;
+                playerInvincible = true;
                 transparent = true;
             }
         }
     }
     public void damageMonster(int i, Entity attacker, int attack, int knockBackPower) {
-        if(i != 999)
-        {
-            if(!gp.monster[gp.currentMap][i].invincible)
-            {
-                gp.playSE(5);   //hit monster.wav
 
-                if(knockBackPower > 0)
-                {
+        if(i != 999) {
+
+            if(!gp.monster[gp.currentMap][i].invincible) {
+
+                if(knockBackPower > 0) {
                     setKnockBack(gp.monster[gp.currentMap][i], attacker, knockBackPower);
                 }
-                if(gp.monster[gp.currentMap][i].offBalance)
-                {
+                if(gp.monster[gp.currentMap][i].offBalance) {
                     attack *= 2;
                 }
                 int damage = attack - gp.monster[gp.currentMap][i].defense;
-                if(damage <= 0 )
-                {
+                if(damage <= 0 ) {
                     damage = 1;
                 }
                 gp.monster[gp.currentMap][i].life -= damage;
                 gp.ui.addMessage(damage + " damage!");
                 gp.monster[gp.currentMap][i].invincible = true;
-                gp.monster[gp.currentMap][i].damageReaction();  //run away from player
+                gp.monster[gp.currentMap][i].damageReaction();
 
-                if(gp.monster[gp.currentMap][i].life <= 0)
-                {
+
+
+                if(gp.monster[gp.currentMap][i].life <= 0) {
+
+                    gp.monster[gp.currentMap][i].eating = false;
                     gp.monster[gp.currentMap][i].dying = true;
+
                     gp.ui.addMessage("Killed the " + gp.monster[gp.currentMap][i].name + "!");
                     gp.ui.addMessage("Exp +" + gp.monster[gp.currentMap][i].exp + "!");
                     exp += gp.monster[gp.currentMap][i].exp;
@@ -675,28 +750,29 @@ public class Player extends Entity{
         }
     }
     public void checkLevelUp() {
-         while(exp >= nextLevelExp)
-         {
+
+         while(exp >= nextLevelExp) {
+
              level++;
              exp = exp - nextLevelExp;          //Example: Your exp is 4 and nextLevelExp is 5. You killed a monster and receive 2exp. So, your exp is now 6. Your 1 extra xp will be recovered for the next level.
              if(level <= 4)
              {
-                 nextLevelExp = nextLevelExp + 4;   //Level 2 to 6: 4xp- 8xp- 12xp- 16xp- 20xp
+                 nextLevelExp += 100;   //Level 2 to 6: 4xp- 8xp- 12xp- 16xp- 20xp
              }
              else
              {
-                 nextLevelExp = nextLevelExp + 8;  //After Level 6: 28xp- 36xp- 44xp- 52xp- 60xp
+                 nextLevelExp += 500;  //After Level 6: 28xp- 36xp- 44xp- 52xp- 60xp
              }
              maxLife += 2;
-             strength++;
+             defaultStrength += 1;
              dexterity++;
              attack = getAttack();
              defense = getDefense();
              gp.playSE(8); //level up.wav
 
-             dialogues[0][0] = "You are level " + level + " now!\n" + "You feel stronger!";
-             setDialogue();
-             startDialogue(this,0);
+
+             gp.ui.addMessage("You are level " + level + " now!");
+
          }
     }
     public void selectItem() {
@@ -707,43 +783,58 @@ public class Player extends Entity{
             Entity selectedItem = inventory.get(itemIndex);
 
             if(selectedItem.type == type_sword ||
-                    selectedItem.type == type_axe || selectedItem.type == type_pickaxe)
-            {
+                    selectedItem.type == type_axe || selectedItem.type == type_pickaxe) {
+
                 currentWeapon = selectedItem;
                 attack = getAttack();   //update player attack
                 getAttackImage(); //update player attack image (sword/axe)
+
+                //equip sound effect
+                switch (selectedItem.type){
+                    case type_sword : gp.playSE(33); break;
+                    case type_axe : gp.playSE(34); break;
+                }
             }
             if(selectedItem.type == type_shield)
             {
                 currentShield = selectedItem;
                 defense = getDefense(); //update player defense
             }
-            if(selectedItem.type == type_light)
-            {
-                if(currentLight == selectedItem)
-                {
+            if(selectedItem.type == type_light) {
+                if(currentLight == selectedItem) {
                     currentLight = null;
                 }
-                else
-                {
+                else {
                     currentLight = selectedItem;
                 }
                 lightUpdated = true;
+                gp.playSE(35);
             }
-            if(selectedItem.type == type_consumable)
-            {
-                if(selectedItem.use(this))
-                {
-                    if(selectedItem.amount > 1)
-                    {
+            if(selectedItem.type == type_consumable) {
+
+                if(selectedItem.use(this)) {
+
+                    if(selectedItem.amount > 1) {
                         selectedItem.amount--;
                     }
-                    else
-                    {
+                    else {
                         inventory.remove(itemIndex);
                     }
                 }
             }
+            if(selectedItem.type == type_edible) {
+                if(!(gp.player.currentHunger >= gp.player.maxHunger)) {
+                    if (selectedItem.use(this)) {
+
+                        if (selectedItem.amount > 1) {
+                            selectedItem.amount--;
+                        } else {
+                            inventory.remove(itemIndex);
+                        }
+                    }
+                }
+            }
+
 
         }
     }

@@ -386,13 +386,16 @@ public class GamePanel extends JPanel implements Runnable{
         music.play();
         music.loop();
     }
-    public void stopMusic()
-    {
+    public void stopMusic() {
         music.stop();
     }
     public void playSE(int i) {
         se.setFile(i);
         se.play();
+    }
+    public void stopSE(){
+
+        se.stop();
     }
     public void changeArea() {
         if(nextArea != currentArea)

@@ -25,6 +25,7 @@ public class MON_Orc extends Entity {
         defense = 2;
         exp = 8;
         knockBackPower = 5;
+        hostile = true;
 
         solidArea.x = 4;
         solidArea.y = 4;
@@ -83,7 +84,7 @@ public class MON_Orc extends Entity {
         }
 
         //Check if it is attacks
-        if(attacking == false)
+        if(!attacking)
         {
             checkAttackOrNot(30, gp.tileSize*4, gp.tileSize); //Small rate = More agressive
         }
@@ -93,6 +94,7 @@ public class MON_Orc extends Entity {
         actionLockCounter = 0;
         //direction = gp.player.direction;
         onPath = true; // gets aggro
+        gp.playSE(5);
     }
     public void checkDrop()
     {

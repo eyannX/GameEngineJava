@@ -5,7 +5,7 @@ import entity.Entity;
 
 public class EventHandler{
     GamePanel gp;
-    EventRect eventRect[][][];
+    EventRect[][][] eventRect;
     Entity eventMaster;
 
     int previousEventX, previousEventY;
@@ -145,7 +145,7 @@ public class EventHandler{
             gp.playSE(2);
             eventMaster.startDialogue(eventMaster,1);
             gp.player.life = gp.player.maxLife;
-            gp.player.mana = gp.player.maxMana;
+            gp.player.currentHunger = gp.player.maxHunger;
             //when you rest at the healing pool monsters will respawn
             gp.aSetter.setMonster();
             gp.saveLoad.save();

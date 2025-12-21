@@ -1,5 +1,6 @@
 package main;
 
+import animals.Chicken;
 import data.Progress;
 import entity.NPC_BigRock;
 import entity.NPC_Merchant;
@@ -185,6 +186,11 @@ public class AssetSetter {
         gp.monster[mapNum][i] = new MON_RedSlime(gp);
         gp.monster[mapNum][i].worldX = gp.tileSize*37;
         gp.monster[mapNum][i].worldY = gp.tileSize*9;
+        i++;
+
+        gp.monster[mapNum][i] = new Chicken(gp);
+        gp.monster[mapNum][i].worldX = gp.tileSize*23;
+        gp.monster[mapNum][i].worldY = gp.tileSize*23;
         i++;
 
         mapNum = 2;

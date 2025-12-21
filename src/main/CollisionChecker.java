@@ -133,20 +133,21 @@ public class CollisionChecker {
     }
 
     //NPC OR MONSTER
-    public int checkEntity(Entity entity, Entity[][] target)
-    {
-        int index = 999;   // no collision returns 999;
-        //Use a temporal direction when it's being knockbacked
+    public int checkEntity(Entity entity, Entity[][] target) {
+
+        int index = 999;
+        // no collision returns 999;
+        //Use a temporal direction when it's being knock backed
+
         String direction = entity.direction;
-        if(entity.knockBack)
-        {
+        if(entity.knockBack) {
             direction = entity.knockBackDirection;
         }
 
-        for(int i = 0;i < target[1].length; i++)
-        {
-            if(target[gp.currentMap][i] != null)
-            {
+        for(int i = 0;i < target[1].length; i++) {
+
+            if(target[gp.currentMap][i] != null) {
+
                 // get entity's solid area position
                 entity.solidArea.x = (int) (entity.worldX + entity.solidArea.x);
                 entity.solidArea.y = (int) (entity.worldY + entity.solidArea.y);
@@ -188,9 +189,10 @@ public class CollisionChecker {
         }
         return index;
     }
-    public boolean checkPlayer(Entity entity)
-    {
+    public boolean checkPlayer(Entity entity) {
+
         boolean contactPlayer = false;
+
         // get entity's solid area position
         entity.solidArea.x = (int) (entity.worldX + entity.solidArea.x);
         entity.solidArea.y = (int) (entity.worldY + entity.solidArea.y);
@@ -219,10 +221,10 @@ public class CollisionChecker {
             entity.collisionOn = true;
             contactPlayer = true;
         }
-        entity.solidArea.x = entity.solidAreaDefaultX; ////Reset
+        entity.solidArea.x = entity.solidAreaDefaultX; //Reset
         entity.solidArea.y = entity.solidAreaDefaultY;
 
-        gp.player.solidArea.x = gp.player.solidAreaDefaultX;     ////Reset
+        gp.player.solidArea.x = gp.player.solidAreaDefaultX;     //Reset
         gp.player.solidArea.y = gp.player.solidAreaDefaultY;
 
         return contactPlayer;

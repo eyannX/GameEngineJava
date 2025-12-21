@@ -20,6 +20,7 @@ public class MON_SkeletonLord extends Entity {
 
         type = type_monster;
         boss = true;
+        hostile = true;
         name = monName;
         defaultSpeed = 1;
         speed = defaultSpeed;
@@ -52,7 +53,7 @@ public class MON_SkeletonLord extends Entity {
     {
 
         int i = 5;
-        if(inRage == false)
+        if(!inRage)
         {
             up1 = setup("/monster/skeletonlord_up_1",gp.tileSize * i,gp.tileSize * i);
             up2 = setup("/monster/skeletonlord_up_2",gp.tileSize * i,gp.tileSize * i);
@@ -63,7 +64,7 @@ public class MON_SkeletonLord extends Entity {
             right1 = setup("/monster/skeletonlord_right_1",gp.tileSize * i,gp.tileSize * i);
             right2 = setup("/monster/skeletonlord_right_2",gp.tileSize * i,gp.tileSize * i);
         }
-        if(inRage == true)
+        if(inRage)
         {
             up1 = setup("/monster/skeletonlord_phase2_up_1",gp.tileSize * i,gp.tileSize * i);
             up2 = setup("/monster/skeletonlord_phase2_up_2",gp.tileSize * i,gp.tileSize * i);

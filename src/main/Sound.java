@@ -8,21 +8,21 @@ import java.net.URL;
 
 public class Sound {
     Clip clip;
-    URL[] soundURL = new URL[30];
+    URL[] soundURL = new URL[50];
     FloatControl fc;
     int volumeScale = 3;
     float volume;
 
     public Sound() {
 
-        soundURL[0] = getClass().getResource("/sound/WeCameNasheed1.wav");
+        soundURL[0] = getClass().getResource("/sound/wind.wav");
         soundURL[1] = getClass().getResource("/sound/pop.wav");
         soundURL[2] = getClass().getResource("/sound/powerup.wav");
         soundURL[3] = getClass().getResource("/sound/unlock.wav");
         soundURL[4] = getClass().getResource("/sound/fanfare.wav");
-        soundURL[5] = getClass().getResource("/sound/hitmonster.wav");
-        soundURL[6] = getClass().getResource("/sound/receivedamage.wav");
-        soundURL[7] = getClass().getResource("/sound/swingweapon.wav");
+        soundURL[5] = getClass().getResource("/sound/damageOrc.wav");
+        soundURL[6] = getClass().getResource("/sound/NightSE.wav");
+        soundURL[7] = getClass().getResource("/sound/swing3.wav");
         soundURL[8] = getClass().getResource("/sound/levelup.wav");
         soundURL[9] = getClass().getResource("/sound/cursor.wav");
         soundURL[10] = getClass().getResource("/sound/fireball.wav");
@@ -38,8 +38,20 @@ public class Sound {
         soundURL[20] = getClass().getResource("/sound/chipwall.wav");
         soundURL[21] = getClass().getResource("/sound/dooropen.wav");
         soundURL[22] = getClass().getResource("/sound/FinalBattle.wav");
-        soundURL[23] = getClass().getResource("/sound/Footstep_Left_Grass.wav");
+        soundURL[23] = getClass().getResource("/sound/footstepGrass.wav");
         soundURL[24] = getClass().getResource("/sound/Footstep_Right_Grass.wav");
+        soundURL[25] = getClass().getResource("/sound/slimeDamage.wav");
+        soundURL[26] = getClass().getResource("/sound/Inventory.wav");
+        soundURL[27] = getClass().getResource("/sound/hurt1.wav");
+        soundURL[28] = getClass().getResource("/sound/hurt2.wav");
+        soundURL[29] = getClass().getResource("/sound/hurt3.wav");
+        soundURL[30] = getClass().getResource("/sound/eat1.wav");
+        soundURL[31] = getClass().getResource("/sound/eat2.wav");
+        soundURL[32] = getClass().getResource("/sound/eat3.wav");
+        soundURL[33] = getClass().getResource("/sound/swordUnsheathe.wav");
+        soundURL[34] = getClass().getResource("/sound/equipAxe.wav");
+        soundURL[35] = getClass().getResource("/sound/equipLantern.wav");
+
 
 
     }
@@ -62,6 +74,7 @@ public class Sound {
             clip.start();
     }
     public void loop() {
+
             clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
 

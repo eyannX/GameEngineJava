@@ -41,7 +41,7 @@ public class OBJ_Fireball extends Projectile {
     public boolean haveResource(Entity user)
     {
         boolean haveResource = false;
-        if(user.mana >= useCost)
+        if(user.currentHunger >= useCost)
         {
             haveResource = true;
         }
@@ -49,7 +49,7 @@ public class OBJ_Fireball extends Projectile {
     }
     public void subtractResource(Entity user)
     {
-        user.mana -= useCost;
+        user.currentHunger -= useCost;
     }
     public Color getParticleColor()
     {

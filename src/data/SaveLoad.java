@@ -1,7 +1,6 @@
 package data;
 
 import main.GamePanel;
-import object.*;
 
 import java.io.*;
 
@@ -24,8 +23,8 @@ public class SaveLoad {
             ds.level = gp.player.level;
             ds.maxLife = gp.player.maxLife;
             ds.life = gp.player.life;
-            ds.maxMana = gp.player.maxMana;
-            ds.mana = gp.player.mana;
+            ds.maxMana = gp.player.maxHunger;
+            ds.mana = gp.player.currentHunger;
             ds.strength = gp.player.strength;
             ds.dexterity = gp.player.dexterity;
             ds.exp = gp.player.exp;
@@ -91,8 +90,8 @@ public class SaveLoad {
             gp.player.level = ds.level;
             gp.player.maxLife = ds.maxLife;
             gp.player.life = ds.life;
-            gp.player.maxMana = ds.maxMana;
-            gp.player.mana = ds.mana;
+            gp.player.maxHunger = ds.maxMana;
+            gp.player.currentHunger = ds.mana;
             gp.player.strength = ds.strength;
             gp.player.dexterity = ds.dexterity;
             gp.player.exp = ds.exp;

@@ -17,22 +17,24 @@ public class Lighting {
     public final int night = 2;
     public final int dawn = 3;
     public int dayState = day;
+    public boolean isNight = false;
+    public boolean sleepTransition = false;
 
 
-    public Lighting(GamePanel gp)
-    {
+
+    public Lighting(GamePanel gp) {
+
         this.gp = gp;
         setLightSource();
     }
-    public void setLightSource()
-    {
+    public void setLightSource() {
+
         //Create a buffered image
         darknessFilter = new BufferedImage(gp.screenWidth,gp.screenHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = (Graphics2D)darknessFilter.getGraphics();
 
 
-        if(gp.player.currentLight == null)
-        {
+        if(gp.player.currentLight == null) {
             g2.setColor(new Color (0,0,0.08f,0.90f));
 
         }
@@ -83,60 +85,93 @@ public class Lighting {
 
         g2.dispose();
     }
-    public void resetDay()
-    {
+    public void resetDay() {
+
         dayState = day;
         filterAlpha = 0f;
+
     }
-    public void update()
-    {
-        if(gp.player.lightUpdated)
-        {
+    public void update() {
+
+
+        if (sleepTransition) {
+            return; // sleep controls alpha, not day cycle
+        }
+
+        if (gp.player.lightUpdated) {
+
             setLightSource();
             gp.player.lightUpdated = false;
         }
 
         //Check the state of the day
-        if(dayState == day)
-        {
+        if(dayState == day) {
+
             dayCounter++;
-            if(dayCounter > 30000) //1 min day
-            {
+
+            //10 min day
+            if(dayCounter > 12000) {
                 dayState = dusk;
                 dayCounter = 0;
             }
         }
-        if(dayState == dusk)
-        {
+
+        //Check
+        if(dayState == dusk) {
+
             filterAlpha += 0.000185185f;   //      1f / 5400 = 0.000185185f = 1 min 30 seconds
-            if(filterAlpha > 1f)
-            {
+            if(filterAlpha > 1f) {
+
+                gp.stopMusic();
+                gp.playMusic(6);
                 filterAlpha = 1f;
                 dayState = night;
             }
         }
-        if(dayState == night)
-        {
+
+        //Check
+        if(dayState == night) {
+
+            isNight = true;
+
             dayCounter++;
-            if(dayCounter > 30000) //1 min night
-            {
+            if(dayCounter > 12000) { //1 min night
+
+                gp.stopMusic();
+                gp.playMusic(0);
                 dayState = dawn;
                 dayCounter = 0;
+                
             }
         }
-        if(dayState == dawn)
-        {
 
+        //Check
+        if(dayState == dawn) {
             filterAlpha -= 0.0005f;   //0.0005f x 2000 = 1f, 2000/60 = 32 seconds
-            if(filterAlpha < 0)
-            {
+
+            if(filterAlpha < 0) {
+
                 filterAlpha = 0;
                 dayState = day;
             }
         }
     }
-    public void draw(Graphics2D g2)
-    {
+    public void toggleDayState() {
+
+        dayState = switch (dayState) {
+            case day   -> night;
+            case night -> day;
+            case dusk  -> dawn;
+            case dawn  -> dusk;
+            default    -> day;
+        };
+
+        // Reset related values
+        dayCounter = 0;
+        filterAlpha = (dayState == night || dayState == dusk) ? 1f : 0f;
+    }
+    public void draw(Graphics2D g2) {
+
         if(gp.currentArea == gp.outside)
         {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,filterAlpha)); //only change alpha when outside
@@ -149,13 +184,13 @@ public class Lighting {
 
         //DEBUG
         String situation = "";
-        switch (dayState)
-        {
+        switch (dayState) {
             case day: situation = "Day"; break;
             case dusk: situation = "Dusk"; break;
             case night: situation = "Night"; break;
             case dawn: situation = "Dawn"; break;
         }
+
         g2.setColor(Color.white);
         g2.setFont(g2.getFont().deriveFont(50f));
         g2.drawString(situation,1150,740);

@@ -53,10 +53,9 @@ public class NPC_OldMan extends Entity{
 
         dialogues[2][0] = "I wonder how to open that door...";
     }
-    public void setAction()
-    {
-        if(onPath == true)
-        {
+    public void setAction() {
+
+        if(onPath) {
 //            int goalCol = 12;
 //            int goalRow = 9;
 
@@ -90,6 +89,18 @@ public class NPC_OldMan extends Entity{
                     direction = "right";
                 }
                 actionLockCounter = 0; // reset
+            }
+            // Bounce back on collision
+            if(collisionOn) {
+
+                switch(direction) {
+                    case "up":    direction = "down"; break;
+                    case "down":  direction = "up"; break;
+                    case "left":  direction = "right"; facing = "right"; break;
+                    case "right": direction = "left";  facing = "left";  break;
+                }
+
+                collisionOn = false;
             }
         }
     }

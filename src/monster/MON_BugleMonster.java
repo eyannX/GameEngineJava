@@ -2,10 +2,7 @@ package monster;
 
 import entity.Entity;
 import main.GamePanel;
-import object.OBJ_Dinar;
-import object.OBJ_Fireball;
-import object.OBJ_Heart;
-import object.OBJ_HungerBar;
+import object.*;
 
 import java.util.Random;
 
@@ -27,6 +24,7 @@ public class MON_BugleMonster extends Entity {
         attack = 2;
         defense = 0;
         exp = 2;
+        hostile = true;
         projectile = new OBJ_Fireball(gp);
 
 
@@ -40,8 +38,8 @@ public class MON_BugleMonster extends Entity {
         getImage();
     }
 
-    public void getImage()
-    {
+    public void getImage() {
+
         up1 = setup("/monster/BugleMonster_down_1",gp.tileSize,gp.tileSize);
         up2 = setup("/monster/BugleMonster_down_2",gp.tileSize,gp.tileSize);
         down1 = setup("/monster/BugleMonster_down_1",gp.tileSize,gp.tileSize);
@@ -51,10 +49,8 @@ public class MON_BugleMonster extends Entity {
         right1 = setup("/monster/BugleMonster_down_1",gp.tileSize,gp.tileSize);
         right2 = setup("/monster/BugleMonster_down_2",gp.tileSize,gp.tileSize);
     }
-    public void setAction()
-    {
-        if(onPath)
-        {
+    public void setAction() {
+        if(onPath) {
 
             //Check if it stops chasing
             checkStopChasingOrNot(gp.player,15,100);
@@ -67,6 +63,7 @@ public class MON_BugleMonster extends Entity {
         }
         else
         {
+
             //Check if it starts chasing
             checkStartChasingOrNot(gp.player, 5, 100);
 
@@ -79,9 +76,9 @@ public class MON_BugleMonster extends Entity {
         actionLockCounter = 0;
         //direction = gp.player.direction;
         onPath = true; // gets aggro
+        gp.playSE(25);
     }
-    public void checkDrop()
-    {
+    public void checkDrop() {
         //CAST A DIE
         int i = new Random().nextInt(100)+1;
 
@@ -92,7 +89,7 @@ public class MON_BugleMonster extends Entity {
         }
         if(i >= 50 && i < 75)
         {
-            dropItem(new OBJ_Heart(gp));
+            dropItem(new OBJ_Exp(gp));
         }
         if(i >= 75 && i < 100)
         {

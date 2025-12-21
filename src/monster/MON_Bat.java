@@ -25,6 +25,7 @@ public class MON_Bat extends Entity {
         attack = 6;
         defense = 0;
         exp = 2;
+        hostile = true;
         //projectile = new OBJ_Rock(gp);
 
 
@@ -49,10 +50,9 @@ public class MON_Bat extends Entity {
         right1 = setup("/monster/bat_down_1",gp.tileSize,gp.tileSize);
         right2 = setup("/monster/bat_down_2",gp.tileSize,gp.tileSize);
     }
-    public void setAction()
-    {
-        if(onPath == true)
-        {
+    public void setAction() {
+
+        if(onPath) {
 //
 //            //Check if it stops chasing
 //            checkStopChasingOrNot(gp.player,15,100);

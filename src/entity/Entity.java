@@ -40,10 +40,12 @@ public class Entity {
     //STATE
     public double worldX,worldY; // player's position on the map
     public String direction = "down";
+    public String facing = "right";
     public int spriteNum = 1;
     public int dialogueSet = 0;
     public int dialogueIndex = 0;
     public boolean collisionOn = false;
+    public boolean playerInvincible = false;
     public boolean invincible = false;
     public boolean attacking = false;
     public boolean alive = true;
@@ -60,17 +62,23 @@ public class Entity {
     public boolean inRage = false;
     public boolean sleep = false;
     public boolean drawing = true;
+    public boolean eating = false;
+    public boolean hostile = false;
 
     //COUNTER
     public int spriteCounter = 0;
     public int actionLockCounter = 0;
     public int invincibleCounter = 0;
+    public int playerInvincibleCounter = 0;
     public int shotAvailableCounter = 0;
     int dyingCounter = 0;
     public int hpBarCounter = 0;
     int knockBackCounter = 0;
     public int guardCounter = 0;
     int offBalanceCounter = 0;
+    public int regenCounter = 0;
+    public int starvationCounter;
+    public int movingCounter;
 
     //CHARACTER ATTRIBUTES
     public String name;
@@ -78,10 +86,11 @@ public class Entity {
     public int speed;
     public int maxLife;
     public int life;
-    public int maxMana;
-    public int mana;
+    public int maxHunger;
+    public int currentHunger;
     public int ammo;
     public int level;
+    public int defaultStrength;
     public int strength;
     public int dexterity;
     public int attack;
@@ -96,6 +105,14 @@ public class Entity {
     public Entity currentLight;
     public Projectile projectile;
     public boolean boss;
+    //Saturation
+    public float saturation = 0;
+    public float maxSaturation = 20;
+    // Timers (ticks)
+    public int isHungry;
+    public boolean isStarving = false;
+    public int maxSpriteNum = 2;
+
 
     //ITEM ATTRIBUTES
     public ArrayList<Entity> inventory = new ArrayList<>();
@@ -111,6 +128,7 @@ public class Entity {
     public int amount = 1;
     public int lightRadius;
 
+
     //TYPE
     public int type; // 0=player, 1=npc, 2=monster etc.
     public final int type_player = 0;
@@ -124,6 +142,13 @@ public class Entity {
     public final int type_obstacle = 8;
     public final int type_light = 9;
     public final int type_pickaxe = 10;
+    public final int type_edible = 11;
+    public final int type_nonHostile = 12;
+    public final int type_neutral = 13;
+
+
+
+
 
     public Entity(GamePanel gp) {
 
@@ -214,6 +239,9 @@ public class Entity {
     public void move(String direction) {
 
     }
+    public void mobDamageReaction(Graphics2D g2){
+
+    }
     public void damageReaction() {
 
     }
@@ -302,6 +330,7 @@ public class Entity {
         gp.particleList.add(p4);
     }
     public void checkCollision() {
+
         collisionOn = false;
         gp.cChecker.checkTile(this);
         gp.cChecker.checkObject(this,false);
@@ -309,12 +338,14 @@ public class Entity {
         gp.cChecker.checkEntity(this, gp.monster);
         gp.cChecker.checkEntity(this,gp.iTile);
         boolean contactPlayer = gp.cChecker.checkPlayer(this);
-        if(this.type == type_monster && contactPlayer == true)
-        {
+        if(this.type == type_monster && hostile && contactPlayer) {
             damagePlayer(attack);
+            System.out.println(name + " hostile=" + hostile + " attack=" + attack);
         }
     }
     public void update() {
+
+
         if(!sleep)
         {
             if(knockBack)
@@ -348,15 +379,13 @@ public class Entity {
                     }
                 }
                 knockBackCounter++;
-                if(knockBackCounter == 10)
-                {
+                if(knockBackCounter == 10) {
                     knockBackCounter = 0;
                     knockBack = false;
                     speed = defaultSpeed;
                 }
             }
-            else if(attacking)
-            {
+            else if(attacking) {
                 attacking();
             }
             else
@@ -364,10 +393,8 @@ public class Entity {
                 setAction();
                 checkCollision();
 
-                if(!collisionOn)
-                {
-                    switch (direction)
-                    {
+                if(!collisionOn) {
+                    switch (direction) {
                         case "up" :
                             worldY -= speed;
                             break;
@@ -386,14 +413,13 @@ public class Entity {
                     }
                 }
                 spriteCounter++;
-                if (spriteCounter > 24) {
-                    if (spriteNum == 1)                  //Every 12 frames sprite num changes.
-                    {
-                        spriteNum = 2;
-                    } else if (spriteNum == 2) {
+
+                if(spriteCounter > 19) {
+                    spriteNum++;
+                    if(spriteNum > maxSpriteNum) {
                         spriteNum = 1;
                     }
-                    spriteCounter = 0;                  // spriteCounter reset
+                    spriteCounter = 0;
                 }
             }
             //Like player's invincible method
@@ -419,9 +445,11 @@ public class Entity {
                     offBalanceCounter = 0;
                 }
             }
+
         }
     }
     public void checkAttackOrNot(int rate, int straight, int horizontal) {
+
         boolean tartgetInRange = false;
         int xDis = getXDistance(gp.player);
         int yDis = getDistance(gp.player);
@@ -454,8 +482,8 @@ public class Entity {
                 break;
         }
 
-        if(tartgetInRange == true)
-        {
+        if(tartgetInRange) {
+
             //Check if it initiates an attack
             int i = new Random().nextInt(rate);
             if(i == 0)
@@ -470,15 +498,15 @@ public class Entity {
     }
     public void checkShootOrNot(int rate, int shotInterval) {
         int i = new Random().nextInt(rate);
-        if(i == 0 && !projectile.alive && shotAvailableCounter == shotInterval)
-        {
+        if(i == 0 && !projectile.alive && shotAvailableCounter == shotInterval) {
+
             projectile.set((int) worldX,(int) worldY,direction,true,this);
             //gp.projectileList.add(projectile);
             //CHECK VACANCY
-            for(int ii = 0; ii < gp.projectile[1].length;ii++)
-            {
-                if(gp.projectile[gp.currentMap][ii] == null)
-                {
+            for(int ii = 0; ii < gp.projectile[1].length;ii++) {
+
+                if(gp.projectile[gp.currentMap][ii] == null) {
+
                     gp.projectile[gp.currentMap][ii] = projectile;
                     break;
                 }
@@ -564,6 +592,7 @@ public class Entity {
         return oppositeDirection;
     }
     public void attacking() {
+
         spriteCounter++;
 
         if(spriteCounter <= motion1_duration) {
@@ -593,10 +622,9 @@ public class Entity {
             solidArea.width = attackArea.width;
             solidArea.height = attackArea.height;
 
-            if(type == type_monster)
-            {
-                if(gp.cChecker.checkPlayer(this)) //This means attack is hitting player
-                {
+            if(type == type_monster && hostile) {
+
+                if(gp.cChecker.checkPlayer(this) && hostile) { //This means attack is hitting player
                     damagePlayer(attack);
                 }
             }
@@ -629,48 +657,53 @@ public class Entity {
     public void damagePlayer(int attack) {
 
 
-        if(!gp.player.invincible) {
+        if(!gp.player.playerInvincible) {
 
             int damage = attack - gp.player.defense;
+
             //Get an opposite direction of this attacker
             String canGuardDirection = getOppositeDirection(direction);
 
-            if(gp.player.guarding && gp.player.direction.equals(canGuardDirection))
-            {
-                //Parry //If you press guard key less then 10 frames before the attack you receive 0 damage, and you get critical chance
-                if(gp.player.guardCounter < 10)
-                {
+            if(gp.player.guarding && gp.player.direction.equals(canGuardDirection)) {
+                //Parry
+                // If you press guard key less then 10 frames before the attack you receive 0 damage, and you get critical chance
+                if(gp.player.guardCounter < 10) {
+
                     damage = 0;
+
                     gp.playSE(16);
                     setKnockBack(this, gp.player, knockBackPower); //Knockback attacker //You can use shield's knockBackPower!
                     offBalance = true;
                     spriteCounter =- 60; //Attacker's sprites returns to motion1//like a stun effect
                 }
-                else
-                {
+                else {
                     //Normal Guard
                     damage =0;
                     gp.playSE(15);
                 }
             }
-            else
-            {
-                //Not guarding
-                gp.playSE(6);   //receive damage.wav
-                if(damage < 1 )
-                {
+            else { //Not guarding
+
+
+                //Random sound effect
+                Random random = new Random();
+                int sound = random.nextInt(0, 2);
+                gp.playSE(27 + sound);
+
+
+                if(damage < 1 && hostile) {
                     damage = 1;
                 }
             }
-            if(damage != 0)
-            {
+            if(damage != 0) {
+
                 gp.player.transparent = true;
                 setKnockBack(gp.player, this, knockBackPower);
             }
 
             //We can give damage
             gp.player.life -= damage;
-            gp.player.invincible = true;
+            gp.player.playerInvincible = true;
         }
     }
     public void setKnockBack(Entity target, Entity attacker, int knockBackPower) {
@@ -697,21 +730,21 @@ public class Entity {
         BufferedImage image= null;
 
 
-        if(inCamera() == true)
+
+        if(inCamera())
         {
             int tempScreenX = getScreenX();
             int tempScreenY = getScreenY();
 
 
-            switch (direction)
-            {
+            switch (direction) {
                 case "up" :
-                    if(attacking == false) //Normal walking sprites
+                    if(!attacking) //Normal walking sprites
                     {
                         if(spriteNum == 1){image = up1;}
                         if(spriteNum == 2) {image = up2;}
                     }
-                    if(attacking == true)  //Attacking sprites
+                    if(attacking)  //Attacking sprites
                     {
                         tempScreenY = getScreenY() - up1.getHeight();    //Adjusted the player's position one tile to up. Explained why I did it at where I call attacking() in update().
                         if(spriteNum == 1) {image = attackUp1;}
@@ -720,12 +753,12 @@ public class Entity {
                     break;
 
                 case "down" :
-                    if(attacking == false) //Normal walking sprites
+                    if(!attacking) //Normal walking sprites
                     {
                         if(spriteNum == 1){image = down1;}
                         if(spriteNum == 2){image = down2;}
                     }
-                    if(attacking == true)  //Attacking sprites
+                    if(attacking)  //Attacking sprites
                     {
                         if(spriteNum == 1){image = attackDown1;}
                         if(spriteNum == 2){image = attackDown2;}
@@ -733,12 +766,12 @@ public class Entity {
                     break;
 
                 case "left" :
-                    if(attacking == false) //Normal walking sprites
+                    if(!attacking) //Normal walking sprites
                     {
                         if(spriteNum == 1) {image = left1;}
                         if(spriteNum == 2) {image = left2;}
                     }
-                    if(attacking == true)  //Attacking sprites
+                    if(attacking)  //Attacking sprites
                     {
                         tempScreenX = getScreenX() - up1.getWidth();    //Adjusted the player's position one tile left. Explained why I did it at where I call attacking() in update().
                         if(spriteNum == 1) {image = attackLeft1;}
@@ -747,12 +780,12 @@ public class Entity {
                     break;
 
                 case "right" :
-                    if(attacking == false) //Normal walking sprites
+                    if(!attacking) //Normal walking sprites
                     {
                         if(spriteNum == 1) {image = right1;}
                         if(spriteNum == 2) {image = right2;}
                     }
-                    if(attacking == true)  //Attacking sprites
+                    if(attacking)  //Attacking sprites
                     {
                         if(spriteNum == 1) {image = attackRight1;}
                         if(spriteNum == 2) {image = attackRight2;}
@@ -761,15 +794,14 @@ public class Entity {
             }
 
             //Make entity half-transparent (%30) when invincible
-            if(invincible == true)
-            {
+            if(invincible || playerInvincible) {
+
                 hpBarOn = true;    //when player attacks monster play hpBar
                 hpBarCounter = 0;  //reset monster aggro
                 changeAlpha(g2,0.4F);
             }
 
-            if(dying == true)
-            {
+            if(dying) {
                 dyingAnimation(g2);
             }
 

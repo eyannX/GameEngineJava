@@ -167,6 +167,7 @@ public class KeyHandler implements KeyListener {
         }
         if(code == KeyEvent.VK_C)
         {
+            gp.playSE(26);
             gp.gameState = gp.characterState;
         }
         if(code == KeyEvent.VK_ENTER)
@@ -187,7 +188,7 @@ public class KeyHandler implements KeyListener {
         }
         if(code == KeyEvent.VK_X)
         {
-            if(gp.map.miniMapOn == false)
+            if(!gp.map.miniMapOn)
             {
                 gp.map.miniMapOn = true;
             }
@@ -250,13 +251,13 @@ public class KeyHandler implements KeyListener {
     }
     public void characterState(int code)
     {
-        if(code == KeyEvent.VK_C)
-        {
+        if(code == KeyEvent.VK_C) {
+
             gp.gameState = gp.playState;
         }
 
-        if(code == KeyEvent.VK_ENTER)
-        {
+        if(code == KeyEvent.VK_ENTER) {
+
             gp.player.selectItem();
         }
         playerInventory(code);

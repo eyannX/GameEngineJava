@@ -68,7 +68,7 @@ public class UI {
     }
     public void drawPauseScreen() {
         g2.setFont(g2.getFont().deriveFont(Font.BOLD,80F));
-        String text = "GAME PAUSED";
+        String text = "II";
         int x = getXforCenteredText(text);
         int y = gp.screenHeight / 2;
         g2.drawString(text,x,y);
@@ -202,7 +202,7 @@ public class UI {
         g2.drawString(value,textX,textY);
         textY += lineHeight;
 
-        value = String.valueOf(gp.player.mana + "/" + gp.player.maxMana);
+        value = String.valueOf(gp.player.currentHunger + "/" + gp.player.maxHunger);
         textX = getXforAlignToRight(value,tailX);
         g2.drawString(value,textX,textY);
         textY += lineHeight;
@@ -307,9 +307,11 @@ public class UI {
         {
 
             //EQUIP CURSOR
+
             if(entity.inventory.get(i) == entity.currentWeapon ||
                     entity.inventory.get(i) == entity.currentShield || entity.inventory.get(i) == entity.currentLight)
             {
+
 //                g2.setColor(new Color(63, 36, 16));
 //                g2.fillRoundRect(slotX +10,slotY + gp.tileSize, gp.tileSize, gp.tileSize,10,10 );
             }
@@ -317,22 +319,23 @@ public class UI {
             g2.drawImage(entity.inventory.get(i).down1, slotX,slotY + gp.tileSize + 32,null);  //draw item
 
             //DISPLAY AMOUNT
-            if(entity == gp.player && entity.inventory.get(i).amount > 1)  //merchant npc's inventory cannot stack items
-            {
+            if(entity == gp.player && entity.inventory.get(i).amount > 1) {
+
+                //merchant npc's inventory cannot stack items
                 g2.setFont(g2.getFont().deriveFont(32f));
                 int amountX;
                 int amountY;
 
                 String s = "" + entity.inventory.get(i).amount;
-                amountX = getXforAlignToRight(s, slotX + 44);
-                amountY = slotY + gp.tileSize;
+                amountX = getXforAlignToRight(s, slotX + gp.tileSize);
+                amountY = slotY + (gp.tileSize*2 + 30 );
 
                 //SHADOW
                 g2.setColor(new Color(60,60,60));
                 g2.drawString(s,amountX,amountY);
                 //NUMBER
                 g2.setColor(Color.white);
-                g2.drawString(s,amountX-3,amountY-3);
+                g2.drawString(s,amountX-3,amountY-1);
 
             }
 
@@ -497,7 +500,7 @@ public class UI {
             g2.drawString(text, x, y+34);
 
             //BUY AN ITEM
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.enterPressed)
             {
                 if(npc.inventory.get(itemIndex).price > gp.player.coin) //not enough coin
                 {
@@ -586,26 +589,71 @@ public class UI {
 
     }
     public void drawSleepScreen() {
+
         counter++;
-        if(counter < 120)
-        {
+        if(counter < 120) {
+
             gp.eManager.lighting.filterAlpha += 0.01f;
-            if(gp.eManager.lighting.filterAlpha > 1f)
-            {
+
+            if(gp.eManager.lighting.filterAlpha > 1f) {
                 gp.eManager.lighting.filterAlpha = 1f;
             }
         }
-        if(counter >= 120)
-        {
+        //if day then night
+        if(counter >= 120 && gp.eManager.lighting.dayState == 2) {
+
             gp.eManager.lighting.filterAlpha -= 0.01f;
-            if(gp.eManager.lighting.filterAlpha <= 0f)
-            {
+            if(gp.eManager.lighting.filterAlpha <= 0f) {
+
                 gp.eManager.lighting.filterAlpha = 0f;
                 counter = 0;
-                gp.eManager.lighting.dayState = gp.eManager.lighting.day;
-                gp.eManager.lighting.dayCounter = 0;
+
+                gp.eManager.lighting.toggleDayState();
+
                 gp.gameState = gp.playState;
-                gp.player.getImage();
+                gp.player.getIdleImage();
+            }
+        }
+        if(counter >= 120 && gp.eManager.lighting.dayState == 0) {
+
+
+            if(gp.eManager.lighting.filterAlpha == 1f) {
+
+                gp.eManager.lighting.filterAlpha = 0f;
+                counter = 0;
+
+                gp.eManager.lighting.toggleDayState();
+
+                gp.gameState = gp.playState;
+                gp.player.getIdleImage();
+            }
+        }
+        if(counter >= 120 && gp.eManager.lighting.dayState == 1) {
+
+
+            if(gp.eManager.lighting.filterAlpha == 1f) {
+
+                gp.eManager.lighting.filterAlpha = 0f;
+                counter = 0;
+
+                gp.eManager.lighting.toggleDayState();
+
+                gp.gameState = gp.playState;
+                gp.player.getIdleImage();
+            }
+        }
+        if(counter >= 120 && gp.eManager.lighting.dayState == 3) {
+
+
+            if(gp.eManager.lighting.filterAlpha == 1f) {
+
+                gp.eManager.lighting.filterAlpha = 0f;
+                counter = 0;
+
+                gp.eManager.lighting.toggleDayState();
+
+                gp.gameState = gp.playState;
+                gp.player.getIdleImage();
             }
         }
     }
@@ -663,7 +711,7 @@ public class UI {
         x = manaStartX;
         y = manaStartY;
         i = 0;
-        while(i < gp.player.maxMana)
+        while(i < gp.player.maxHunger)
         {
             g2.drawImage(crystal_blank,x ,y, iconSize, iconSize, null);
             i++;
@@ -680,7 +728,7 @@ public class UI {
         y = manaStartY;
         i = 0;
         //DRAW MANA
-        while(i < gp.player.mana)
+        while(i < gp.player.currentHunger)
         {
             g2.drawImage(crystal_full,x,y,iconSize,iconSize,null);
             i++;

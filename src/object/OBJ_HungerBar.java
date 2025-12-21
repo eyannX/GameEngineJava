@@ -26,7 +26,7 @@ public class OBJ_HungerBar extends Entity {
     {
         gp.playSE(2);
         gp.ui.addMessage("hunger +" + value);
-        entity.mana += value;
+        entity.currentHunger += value;
         return true;
     }
 }
