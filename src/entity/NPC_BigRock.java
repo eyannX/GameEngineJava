@@ -76,7 +76,7 @@ public class NPC_BigRock extends Entity{
 
         checkCollision();
 
-        if(collisionOn == false)
+        if(!collisionOn)
         {
             switch(direction)
             {

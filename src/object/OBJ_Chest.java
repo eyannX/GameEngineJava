@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Chest extends Entity {
 
     GamePanel gp;
@@ -26,6 +28,10 @@ public class OBJ_Chest extends Entity {
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
     public void setLoot(Entity loot) {
         this.loot = loot;

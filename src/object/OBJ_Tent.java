@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Tent extends Entity {
 
     GamePanel gp;
@@ -30,5 +32,9 @@ public class OBJ_Tent extends Entity {
         gp.player.getSleepingImage(down1);
 
         return false;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

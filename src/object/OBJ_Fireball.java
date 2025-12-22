@@ -5,6 +5,7 @@ import entity.Projectile;
 import main.GamePanel;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class OBJ_Fireball extends Projectile {
 
@@ -26,6 +27,7 @@ public class OBJ_Fireball extends Projectile {
         price = 75;
         getImage();
 
+
     }
     public void getImage()
     {
@@ -37,6 +39,26 @@ public class OBJ_Fireball extends Projectile {
         left2 = setup("/projectile/fireball_left_2", gp.tileSize,gp.tileSize);
         right1 = setup("/projectile/fireball_right_1", gp.tileSize,gp.tileSize);
         right2 = setup("/projectile/fireball_right_2", gp.tileSize,gp.tileSize);
+    }
+    @Override
+    public BufferedImage getCurrentImage() {
+
+        if(attacking) {
+            return switch(direction) {
+                case "up"    -> (spriteNum == 1 ? attackUp1 : attackUp2);
+                case "down"  -> (spriteNum == 1 ? attackDown1 : attackDown2);
+                case "left"  -> (spriteNum == 1 ? attackLeft1 : attackLeft2);
+                case "right" -> (spriteNum == 1 ? attackRight1 : attackRight2);
+                default -> null;
+            };
+        }
+
+        return getDirectionalImage(
+                up1, up2,
+                down1, down2,
+                left1, left2,
+                right1, right2
+        );
     }
     public boolean haveResource(Entity user)
     {
@@ -71,4 +93,5 @@ public class OBJ_Fireball extends Projectile {
         int maxLife = 20;
         return maxLife;
     }
+
 }

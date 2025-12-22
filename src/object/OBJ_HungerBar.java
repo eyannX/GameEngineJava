@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_HungerBar extends Entity {
 
     GamePanel gp;
@@ -28,5 +30,9 @@ public class OBJ_HungerBar extends Entity {
         gp.ui.addMessage("hunger +" + value);
         entity.currentHunger += value;
         return true;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

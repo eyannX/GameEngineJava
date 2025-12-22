@@ -1,33 +1,32 @@
 package object;
-
 import entity.Entity;
 import main.GamePanel;
 
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
-public class OBJ_Croissant extends Entity {
+public class OBJ_Chicken extends Entity {
 
     GamePanel gp;
-    public static final String objName = "croissant";
+    public static final String objName = "Chicken";
 
-    public OBJ_Croissant(GamePanel gp) {
+    public OBJ_Chicken(GamePanel gp) {
         super(gp);
 
         this.gp = gp;
 
         type = type_edible;
         name = objName;
-        value = 5;
-        down1 = setup("/objects/croissant",32, 32);
+        value = 6;
+        down1 = setup("/objects/chicken", 32, 32);
         description = "[" + name + "]\nrecovers your hunger by " + value + ".";
-        price = 50;
+        price = 100;
         stackable = true;
 
         setDialogue();
     }
     public void setDialogue(){
-       // meow meow meow
+        // meow meow meow
     }
     public boolean use(Entity entity) {
 

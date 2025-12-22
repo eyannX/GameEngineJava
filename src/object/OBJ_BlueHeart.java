@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_BlueHeart extends Entity {
 
     GamePanel gp;
@@ -28,6 +30,10 @@ public class OBJ_BlueHeart extends Entity {
         gp.gameState = gp.cutsceneState;
         gp.csManager.sceneNum = gp.csManager.ending;
         return true;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 
 }

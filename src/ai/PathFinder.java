@@ -2,6 +2,7 @@ package ai;
 
 import entity.Entity;
 import main.GamePanel;
+import tile_interactive.TallInteractiveObject;
 
 import java.util.ArrayList;
 
@@ -65,10 +66,8 @@ public class PathFinder {
         goalReached = false;
         step = 0;
     }
-    public void setNodes(int startCol, int startRow, int goalCol, int goalRow, Entity entity)
-    {
+    public void setNodes(int startCol, int startRow, int goalCol, int goalRow, Entity entity) {
         resetNodes();
-        //set Start and Goal node
         startNode = node[startCol][startRow];
         currentNode = startNode;
         goalNode = node[goalCol][goalRow];
@@ -76,38 +75,56 @@ public class PathFinder {
 
         int col = 0;
         int row = 0;
-        while(col < gp.maxWorldCol && row < gp.maxWorldRow)
-        {
-            //SET SOLID NODE
-            //CHECK TILES
-            int tileNum = gp.tileM.mapTileNum[gp.currentMap][col][row];
-            if(gp.tileM.tile[tileNum].collision)
-            {
-                node[col][row].solid = true;
 
+        // 1. Mark tiles solid based on tile collision and interactive tiles
+        while(col < gp.maxWorldCol && row < gp.maxWorldRow) {
+            int tileNum = gp.tileM.mapTileNum[gp.currentMap][col][row];
+            if(gp.tileM.tile[tileNum].collision) {
+                node[col][row].solid = true;
             }
-            //CHECK INTERACTIVE TILES
-            for(int i = 0; i < gp.iTile[1].length; i++)
-            {
-                if(gp.iTile[gp.currentMap][i] != null &&
-                        gp.iTile[gp.currentMap][i].destructible)
-                {
+            for(int i = 0; i < gp.iTile[1].length; i++) {
+                if(gp.iTile[gp.currentMap][i] != null && gp.iTile[gp.currentMap][i].destructible) {
                     int itCol = (int) (gp.iTile[gp.currentMap][i].worldX / gp.tileSize);
                     int itRow = (int) (gp.iTile[gp.currentMap][i].worldY / gp.tileSize);
-                    node[itCol][itRow].solid = true;
+                    if(itCol == col && itRow == row) {
+                        node[col][row].solid = true;
+                    }
                 }
             }
-            //SET COST
+
+            // SET COST
             getCost(node[col][row]);
 
             col++;
-            if(col == gp.maxWorldCol)
-            {
+            if(col == gp.maxWorldCol) {
                 col = 0;
                 row++;
             }
         }
+
+        // 2. Now mark tall objects' tiles as solid separately
+        // CHECK TALL OBJECTS
+        for (TallInteractiveObject tallObj : gp.tallObj[gp.currentMap]) {
+            if (tallObj != null) {
+                // Calculate tile range that the solid area covers
+                int leftTile = (int) ((tallObj.worldX + tallObj.solidArea.x) / gp.tileSize);
+                int rightTile = (int) ((tallObj.worldX + tallObj.solidArea.x + tallObj.solidArea.width) / gp.tileSize);
+                int topTile = (int) ((tallObj.worldY + tallObj.solidArea.y) / gp.tileSize);
+                int bottomTile = (int) ((tallObj.worldY + tallObj.solidArea.y + tallObj.solidArea.height) / gp.tileSize);
+
+                for (int c = leftTile; c <= rightTile; c++) {
+                    for (int r = topTile; r <= bottomTile; r++) {
+                        if (c >= 0 && c < gp.maxWorldCol && r >= 0 && r < gp.maxWorldRow) {
+                            node[c][r].solid = true;
+                           //debug// System.out.println("Marking tallObj solid at " + c + "," + r);
+                        }
+                    }
+                }
+            }
+        }
+
     }
+
     public void getCost(Node node)
     {
         // G Cost
@@ -125,7 +142,7 @@ public class PathFinder {
     }
     public boolean search()
     {
-        while(goalReached == false && step < 500)
+        while(!goalReached && step < 500)
         {
             int col = currentNode.col;
             int row = currentNode.row;
@@ -145,12 +162,12 @@ public class PathFinder {
                 openNode(node[col-1][row]);
             }
             //open the DOWN node
-            if(row + 1 <= gp.maxWorldRow)
+            if(row + 1 < gp.maxWorldRow)
             {
                 openNode(node[col][row+1]);
             }
             //open the RIGHT node
-            if(col + 1 <= gp.maxWorldCol)
+            if(col + 1 < gp.maxWorldCol)
             {
                 openNode(node[col+1][row]);
             }
@@ -198,7 +215,7 @@ public class PathFinder {
     }
     public void openNode(Node node)
     {
-        if(node.open == false && node.checked == false && node.solid == false)
+        if(!node.open && !node.checked && !node.solid)
         {
             node.open = true;
             node.parent = currentNode;

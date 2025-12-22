@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Dinar extends Entity {
 
     GamePanel gp;
@@ -16,6 +18,10 @@ public class OBJ_Dinar extends Entity {
         value = 30;
         down1 = setup("/objects/coin", 32, 32);
         price = 25;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
     public boolean use(Entity entity)
     {

@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Shield_Blue extends Entity {
 
     public static final String objName = "Blue Shield";
@@ -16,5 +18,9 @@ public class OBJ_Shield_Blue extends Entity {
         defenseValue = 2;
         description = "[" + name + "]\nA shiny blue shield.";
         price = 150;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

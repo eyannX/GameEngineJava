@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Pickaxe extends Entity {
     public static final String objName = "Pickaxe";
 
@@ -21,6 +23,10 @@ public class OBJ_Pickaxe extends Entity {
         knockBackPower = 1;
         motion1_duration = 10;
         motion2_duration = 20;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 
 }

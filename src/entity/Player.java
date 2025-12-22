@@ -354,6 +354,8 @@ public class Player extends Entity{
             gp.cChecker.checkEntity(this, gp.npc);
             gp.cChecker.checkEntity(this, gp.monster);
             gp.cChecker.checkEntity(this, gp.iTile);
+            gp.cChecker.checkTallObject(this, gp.tallObj[gp.currentMap]);
+
 
             if(collisionOn) {
                 knockBackCounter = 0;
@@ -443,6 +445,8 @@ public class Player extends Entity{
             contactMonster(monsterIndex);
 
             int iTileIndex = gp.cChecker.checkEntity(this, gp.iTile);
+            gp.cChecker.checkTallObject(this, gp.tallObj[gp.currentMap]);
+
 
             gp.eHandler.checkEvent();
 
@@ -976,36 +980,39 @@ public class Player extends Entity{
                 AlphaComposite.SRC_OVER, 1f));
 
         // DEBUG ---------------------------------------------------------
-        g2.setFont(new Font("Arial", Font.PLAIN, 26));
-        g2.setColor(Color.white);
-        g2.drawString("Invincible:" + invincibleCounter, 10, 400);
+        if(gp.debug){
+            g2.setFont(new Font("Arial", Font.PLAIN, 26));
+            g2.setColor(Color.white);
+            g2.drawString("Invincible:" + invincibleCounter, 10, 400);
 
-        g2.setColor(Color.RED);
-        g2.drawRect(
-                screenX + solidArea.x,
-                screenY + solidArea.y,
-                solidArea.width,
-                solidArea.height
-        );
+            g2.setColor(Color.RED);
+            g2.drawRect(
+                    screenX + solidArea.x,
+                    screenY + solidArea.y,
+                    solidArea.width,
+                    solidArea.height
+            );
 
-        tempScreenX = screenX + solidArea.x;
-        tempScreenY = screenY + solidArea.y;
+            tempScreenX = screenX + solidArea.x;
+            tempScreenY = screenY + solidArea.y;
 
-        switch(direction) {
-            case "up":    tempScreenY = screenY - attackArea.height; break;
-            case "down":  tempScreenY = screenY + gp.tileSize; break;
-            case "left":  tempScreenX = screenX - attackArea.width; break;
-            case "right": tempScreenX = screenX + gp.tileSize; break;
+            switch(direction) {
+                case "up":    tempScreenY = screenY - attackArea.height; break;
+                case "down":  tempScreenY = screenY + gp.tileSize; break;
+                case "left":  tempScreenX = screenX - attackArea.width; break;
+                case "right": tempScreenX = screenX + gp.tileSize; break;
+            }
+
+            g2.setColor(Color.red);
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRect(
+                    tempScreenX,
+                    tempScreenY,
+                    attackArea.width,
+                    attackArea.height
+            );
+        }
         }
 
-        g2.setColor(Color.red);
-        g2.setStroke(new BasicStroke(1));
-        g2.drawRect(
-                tempScreenX,
-                tempScreenY,
-                attackArea.width,
-                attackArea.height
-        );
-    }
 
 }

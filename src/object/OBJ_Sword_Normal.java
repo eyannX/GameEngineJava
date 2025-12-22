@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Sword_Normal extends Entity {
 
     public static final String objName = "Normal Sword";
@@ -21,5 +23,9 @@ public class OBJ_Sword_Normal extends Entity {
         knockBackPower = 3;
         motion1_duration = 5;
         motion2_duration = 15;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

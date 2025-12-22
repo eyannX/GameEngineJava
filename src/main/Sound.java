@@ -51,6 +51,10 @@ public class Sound {
         soundURL[33] = getClass().getResource("/sound/swordUnsheathe.wav");
         soundURL[34] = getClass().getResource("/sound/equipAxe.wav");
         soundURL[35] = getClass().getResource("/sound/equipLantern.wav");
+        soundURL[36] = getClass().getResource("/sound/chickenScream.wav");
+        soundURL[37] = getClass().getResource("/sound/chickenEat.wav");
+        soundURL[38] = getClass().getResource("/sound/parrotScream.wav");
+        soundURL[39] = getClass().getResource("/sound/parrotHurt.wav");
 
 
 

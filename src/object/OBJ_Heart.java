@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Heart extends Entity {
     GamePanel gp;
     public static final String objName = "Heart";
@@ -26,5 +28,9 @@ public class OBJ_Heart extends Entity {
         gp.ui.addMessage("Life +" + value);
         entity.life += value;
         return true;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

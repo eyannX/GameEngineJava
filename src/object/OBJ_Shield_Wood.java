@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Shield_Wood extends Entity {
 
     public static final String objName = "Wood Shield";
@@ -16,5 +18,9 @@ public class OBJ_Shield_Wood extends Entity {
         defenseValue = 1;
         description = "[" + name + "]\nMade by wood.";
         price = 30;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

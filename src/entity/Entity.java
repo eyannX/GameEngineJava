@@ -24,9 +24,17 @@ public class Entity {
     public BufferedImage left_idle1, left_idle2, left_idle3, left_idle4;
     public BufferedImage right_idle1, right_idle2, right_idle3, right_idle4;
 
+    public BufferedImage eat_left_1, eat_left_2, eat_left_3, eat_left_4, eat_left_5, eat_left_6, eat_left_7, eat_left_8;
+    public BufferedImage eat_right_1, eat_right_2, eat_right_3, eat_right_4, eat_right_5, eat_right_6, eat_right_7, eat_right_8;
 
 
-    public BufferedImage attackUp1,attackUp2,attackDown1,attackDown2,attackLeft1,attackLeft2,attackRight1,attackRight2,guardUp,guardDown,guardLeft,guardRight;
+
+    public BufferedImage attackUp1,attackUp2,attackUp3, attackUp4,
+            attackDown1, attackDown2, attackDown3, attackDown4
+            ,attackLeft1,attackLeft2, attackLeft3, attackLeft4,
+            attackRight1,attackRight2, attackRight3, attackRight4,
+            guardUp,guardDown,guardLeft,guardRight;
+
     public BufferedImage image, image2, image3;
     public Rectangle solidArea = new Rectangle(0,0, 48, 48);
     public Rectangle attackArea = new Rectangle(0,0, 0, 0);
@@ -64,6 +72,8 @@ public class Entity {
     public boolean drawing = true;
     public boolean eating = false;
     public boolean hostile = false;
+    public boolean screaming = false;
+    public boolean flying = false;
 
     //COUNTER
     public int spriteCounter = 0;
@@ -188,13 +198,13 @@ public class Entity {
         return (int) ((worldY + solidArea.y) / gp.tileSize);
     }
     public int getCenterX() {
-        int centerX = (int) (worldX + left1.getWidth()/2);
-        return centerX;
+        return (int) (worldX + solidArea.x + solidArea.width / 2);
     }
+
     public int getCenterY() {
-        int centerY = (int) (worldY + up1.getWidth()/2);
-        return centerY;
+        return (int) (worldY + solidArea.y + solidArea.height / 2);
     }
+
     public int getXDistance(Entity target) {
         int xDistance = Math.abs(getCenterX() - target.getCenterX());
         return xDistance;
@@ -237,9 +247,6 @@ public class Entity {
 
     }
     public void move(String direction) {
-
-    }
-    public void mobDamageReaction(Graphics2D g2){
 
     }
     public void damageReaction() {
@@ -312,6 +319,27 @@ public class Entity {
         //Sub-class specifications
         return maxLife;
     }
+    public BufferedImage getCurrentImage() {
+
+        return null; // subclasses decide
+    }
+    protected BufferedImage getDirectionalImage(
+
+            BufferedImage up1, BufferedImage up2,
+            BufferedImage down1, BufferedImage down2,
+            BufferedImage left1, BufferedImage left2,
+            BufferedImage right1, BufferedImage right2) {
+
+        switch (direction) {
+            case "up":    return (spriteNum == 1) ? up1 : up2;
+            case "down":  return (spriteNum == 1) ? down1 : down2;
+            case "left":  return (spriteNum == 1) ? left1 : left2;
+            case "right": return (spriteNum == 1) ? right1 : right2;
+        }
+        return null;
+    }
+
+
     public void generateParticle(Entity generator, Entity target) {
         Color color = generator.getParticleColor();
         int size = generator.getParticleSize();
@@ -337,6 +365,7 @@ public class Entity {
         gp.cChecker.checkEntity(this, gp.npc);
         gp.cChecker.checkEntity(this, gp.monster);
         gp.cChecker.checkEntity(this,gp.iTile);
+        gp.cChecker.checkTallObject(this, gp.tallObj[gp.currentMap]);;
         boolean contactPlayer = gp.cChecker.checkPlayer(this);
         if(this.type == type_monster && hostile && contactPlayer) {
             damagePlayer(attack);
@@ -414,11 +443,36 @@ public class Entity {
                 }
                 spriteCounter++;
 
-                if(spriteCounter > 19) {
+                // Set animation speed depending on current state
+                int animationSpeed;
+                if (attacking) {
+                    animationSpeed = 30;    // slower attack animation
+                } else if (screaming) {
+                    animationSpeed = 5;    // medium speed scream animation
+                } else if (flying) {
+                    animationSpeed = 10;    // faster flying animation
+                } else {
+                    animationSpeed = 8;    // walking or default animation speed
+                }
+
+                if (spriteCounter > animationSpeed) {
                     spriteNum++;
-                    if(spriteNum > maxSpriteNum) {
+
+                    int maxFrame = attacking ? 4 : screaming ? 7 : flying ? 8 : 8;
+
+                    if (spriteNum > maxFrame) {
                         spriteNum = 1;
+
+                        if (screaming) {
+                            screaming = false;
+                            speed = defaultSpeed;
+                        }
+
+                        if (attacking) {
+                            attacking = false;
+                        }
                     }
+
                     spriteCounter = 0;
                 }
             }
@@ -496,6 +550,13 @@ public class Entity {
         }
 
     }
+    public boolean isHorizontalOnlyAttacker() {
+        return false;
+    }
+
+
+
+
     public void checkShootOrNot(int rate, int shotInterval) {
         int i = new Random().nextInt(rate);
         if(i == 0 && !projectile.alive && shotAvailableCounter == shotInterval) {
@@ -525,6 +586,7 @@ public class Entity {
         }
     }
     public void checkStopChasingOrNot(Entity target, int distance, int rate) {
+
         if(getTileDistance(target) > distance)
         {
             int i = new Random().nextInt(rate);
@@ -725,92 +787,80 @@ public class Entity {
         }
         return inCamera;
     }
+
+    public void drawSolidArea(Graphics2D g2, GamePanel gp) {
+
+        int screenX = (int)(worldX + solidArea.x - gp.player.worldX + gp.player.screenX);
+        int screenY = (int)(worldY + solidArea.y - gp.player.worldY + gp.player.screenY);
+
+        g2.setColor(Color.red);
+        g2.setStroke(new BasicStroke(2));
+        g2.drawRect(screenX, screenY, solidArea.width, solidArea.height);
+    }
+
+
+
     public void draw(Graphics2D g2) {
 
-        BufferedImage image= null;
+        if(!inCamera()) return;
 
+        BufferedImage image = getCurrentImage();
+        if(image == null) return;
 
+        int screenX = getScreenX();
+        int screenY = getScreenY();
 
-        if(inCamera())
-        {
-            int tempScreenX = getScreenX();
-            int tempScreenY = getScreenY();
+        int drawX = screenX;
+        int drawY = screenY;
 
+        // ATTACK OFFSET (SAFE)
+        if(attacking) {
 
-            switch (direction) {
-                case "up" :
-                    if(!attacking) //Normal walking sprites
-                    {
-                        if(spriteNum == 1){image = up1;}
-                        if(spriteNum == 2) {image = up2;}
-                    }
-                    if(attacking)  //Attacking sprites
-                    {
-                        tempScreenY = getScreenY() - up1.getHeight();    //Adjusted the player's position one tile to up. Explained why I did it at where I call attacking() in update().
-                        if(spriteNum == 1) {image = attackUp1;}
-                        if(spriteNum == 2) {image = attackUp2;}
-                    }
-                    break;
-
-                case "down" :
-                    if(!attacking) //Normal walking sprites
-                    {
-                        if(spriteNum == 1){image = down1;}
-                        if(spriteNum == 2){image = down2;}
-                    }
-                    if(attacking)  //Attacking sprites
-                    {
-                        if(spriteNum == 1){image = attackDown1;}
-                        if(spriteNum == 2){image = attackDown2;}
-                    }
-                    break;
-
-                case "left" :
-                    if(!attacking) //Normal walking sprites
-                    {
-                        if(spriteNum == 1) {image = left1;}
-                        if(spriteNum == 2) {image = left2;}
-                    }
-                    if(attacking)  //Attacking sprites
-                    {
-                        tempScreenX = getScreenX() - up1.getWidth();    //Adjusted the player's position one tile left. Explained why I did it at where I call attacking() in update().
-                        if(spriteNum == 1) {image = attackLeft1;}
-                        if(spriteNum == 2) {image = attackLeft2;}
-                    }
-                    break;
-
-                case "right" :
-                    if(!attacking) //Normal walking sprites
-                    {
-                        if(spriteNum == 1) {image = right1;}
-                        if(spriteNum == 2) {image = right2;}
-                    }
-                    if(attacking)  //Attacking sprites
-                    {
-                        if(spriteNum == 1) {image = attackRight1;}
-                        if(spriteNum == 2) {image = attackRight2;}
-                    }
-                    break;
+            // Horizontal attackers (Parrot, etc.)
+            if(direction.equals("left")) {
+                drawX -= image.getWidth() - gp.tileSize;
             }
 
-            //Make entity half-transparent (%30) when invincible
-            if(invincible || playerInvincible) {
-
-                hpBarOn = true;    //when player attacks monster play hpBar
-                hpBarCounter = 0;  //reset monster aggro
-                changeAlpha(g2,0.4F);
+            // Vertical attackers (Player, swords, etc.)
+            if(direction.equals("up")) {
+                drawY -= image.getHeight() - gp.tileSize;
             }
-
-            if(dying) {
-                dyingAnimation(g2);
-            }
-
-            g2.drawImage(image, tempScreenX, tempScreenY, null);
-
-            //Reset graphics opacity / alpha
-            changeAlpha(g2,1F);
         }
+
+
+        // INVINCIBILITY FLASH
+        if(invincible || playerInvincible) {
+            hpBarOn = true;
+            hpBarCounter = 0;
+            changeAlpha(g2, 0.4f);
+        }
+
+
+        // DYING ANIMATION
+        if(dying) {
+            dyingAnimation(g2);
+        }
+
+        // DRAW ENTITY
+        g2.drawImage(image, drawX, drawY, null);
+
+
+        // DEBUG HITBOX (OPTIONAL)
+        if(gp.debug) {
+            g2.setColor(Color.RED);
+            g2.drawRect(
+                    drawX + solidArea.x,
+                    drawY + solidArea.y,
+                    solidArea.width,
+                    solidArea.height
+            );
+        }
+
+
+        // RESET ALPHA
+        changeAlpha(g2, 1f);
     }
+
     // Every 5 frames switch alpha between 0 and 1
     public void dyingAnimation(Graphics2D g2) {
 

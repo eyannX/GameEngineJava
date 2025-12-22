@@ -66,7 +66,7 @@ public class MON_Orc extends Entity {
     }
     public void setAction()
     {
-        if(onPath == true)
+        if(onPath)
         {
             //Check if it stops chasing
             checkStopChasingOrNot(gp.player,15,100);

@@ -1,0 +1,427 @@
+package animals;
+
+import entity.Entity;
+import main.GamePanel;
+import object.*;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.Random;
+
+public class Parrot extends Entity {
+
+    GamePanel gp;
+    Random random = new Random();
+
+    // States
+
+    // Timers
+    int screamCounter = 0;
+    int screamDuration = 45; // ~0.75s if 60 FPS
+
+    // Animation control
+    int maxWalkFrames = 8;
+    int maxFlyFrames = 8;
+    int maxScreamFrames = 7;
+    int maxAttackFrames = 4;
+
+
+    int spriteSpeed = 10;        // How many ticks before advancing frame (e.g. 10 = ~6 frames per second)
+
+
+
+    // AI timing
+    int stateCounter = 0;
+    int decisionInterval = 120; // 2 seconds at 60 FPS
+
+
+
+    public BufferedImage scream_right_1,scream_right_2, scream_right_3, scream_right_4, scream_right_5, scream_right_6, scream_right_7;
+    public BufferedImage scream_left_1,scream_left_2, scream_left_3, scream_left_4, scream_left_5, scream_left_6, scream_left_7;
+
+    public BufferedImage fly_right1, fly_right2, fly_right3, fly_right4, fly_right5, fly_right6, fly_right7, fly_right8;
+    public BufferedImage fly_left1, fly_left2, fly_left3, fly_left4, fly_left5, fly_left6, fly_left7, fly_left8;
+
+    public Parrot(GamePanel gp) {
+
+        super(gp);
+        this.gp = gp;
+
+        type = type_monster;          // reuse monster systems (HP, drops, damage)
+        name = "Parrot";
+
+        defaultSpeed = 1;
+        speed = defaultSpeed;
+
+        maxLife = 4;
+        life = maxLife;
+
+        attack = 2;
+        defense = 0;
+        exp = 1;
+        hostile = false;
+
+        direction = "right";
+
+        solidArea.x = 20;
+        solidArea.y = 20;
+        solidArea.width = 40;
+        solidArea.height = 40;
+        solidAreaDefaultX = solidArea.x;
+        solidAreaDefaultY = solidArea.y;
+
+        getImage();
+        getScreamImage();
+        getAttackImage();
+        getFlyingImage();
+
+//                            :)
+    }
+
+    public void getImage() {
+
+        left1  = setup("/animals/parrot/walk_left1",  gp.tileSize, gp.tileSize);
+        left2  = setup("/animals/parrot/walk_left2",  gp.tileSize, gp.tileSize);
+        left3  = setup("/animals/parrot/walk_left3",  gp.tileSize, gp.tileSize);
+        left4  = setup("/animals/parrot/walk_left4",  gp.tileSize, gp.tileSize);
+        left5  = setup("/animals/parrot/walk_left5",  gp.tileSize, gp.tileSize);
+        left6  = setup("/animals/parrot/walk_left6",  gp.tileSize, gp.tileSize);
+        left7  = setup("/animals/parrot/walk_left7",  gp.tileSize, gp.tileSize);
+        left8  = setup("/animals/parrot/walk_left8",  gp.tileSize, gp.tileSize);
+
+        right1 = setup("/animals/parrot/walk_right1", gp.tileSize, gp.tileSize);
+        right2 = setup("/animals/parrot/walk_right2", gp.tileSize, gp.tileSize);
+        right3 = setup("/animals/parrot/walk_right3", gp.tileSize, gp.tileSize);
+        right4 = setup("/animals/parrot/walk_right4", gp.tileSize, gp.tileSize);
+        right5 = setup("/animals/parrot/walk_right5", gp.tileSize, gp.tileSize);
+        right6 = setup("/animals/parrot/walk_right6", gp.tileSize, gp.tileSize);
+        right7 = setup("/animals/parrot/walk_right7", gp.tileSize, gp.tileSize);
+        right8 = setup("/animals/parrot/walk_right8", gp.tileSize, gp.tileSize);
+    }
+    public void getScreamImage() {
+
+        scream_left_1 = setup("/animals/parrot/scream_left1", gp.tileSize, gp.tileSize);
+        scream_left_2 = setup("/animals/parrot/scream_left2", gp.tileSize, gp.tileSize);
+        scream_left_3 = setup("/animals/parrot/scream_left3", gp.tileSize, gp.tileSize);
+        scream_left_4 = setup("/animals/parrot/scream_left4", gp.tileSize, gp.tileSize);
+        scream_left_5 = setup("/animals/parrot/scream_left5", gp.tileSize, gp.tileSize);
+        scream_left_6 = setup("/animals/parrot/scream_left6", gp.tileSize, gp.tileSize);
+        scream_left_7 = setup("/animals/parrot/scream_left7", gp.tileSize, gp.tileSize);
+
+        scream_right_1 = setup("/animals/parrot/scream_right1", gp.tileSize, gp.tileSize);
+        scream_right_2 = setup("/animals/parrot/scream_right2", gp.tileSize, gp.tileSize);
+        scream_right_3 = setup("/animals/parrot/scream_right3", gp.tileSize, gp.tileSize);
+        scream_right_4 = setup("/animals/parrot/scream_right4", gp.tileSize, gp.tileSize);
+        scream_right_5 = setup("/animals/parrot/scream_right5", gp.tileSize, gp.tileSize);
+        scream_right_6 = setup("/animals/parrot/scream_right6", gp.tileSize, gp.tileSize);
+        scream_right_7 = setup("/animals/parrot/scream_right7", gp.tileSize, gp.tileSize);
+
+    }
+    public void getAttackImage(){
+
+        attackLeft1 = setup("/animals/parrot/attack_left1", gp.tileSize*2, gp.tileSize);
+        attackLeft2 = setup("/animals/parrot/attack_left2", gp.tileSize*2, gp.tileSize);
+        attackLeft3 = setup("/animals/parrot/attack_left3", gp.tileSize*2, gp.tileSize);
+        attackLeft4 = setup("/animals/parrot/attack_left4", gp.tileSize*2, gp.tileSize);
+
+        attackRight1 = setup("/animals/parrot/attack_right1", gp.tileSize*2, gp.tileSize);
+        attackRight2 = setup("/animals/parrot/attack_right2", gp.tileSize*2, gp.tileSize);
+        attackRight3 = setup("/animals/parrot/attack_right3", gp.tileSize*2, gp.tileSize);
+        attackRight4 = setup("/animals/parrot/attack_right4", gp.tileSize*2, gp.tileSize);
+
+    }
+    public void getFlyingImage(){
+
+        fly_left1 = setup("/animals/parrot/fly_left1", gp.tileSize, gp.tileSize);
+        fly_left2 = setup("/animals/parrot/fly_left2", gp.tileSize, gp.tileSize);
+        fly_left3 = setup("/animals/parrot/fly_left3", gp.tileSize, gp.tileSize);
+        fly_left4 = setup("/animals/parrot/fly_left4", gp.tileSize, gp.tileSize);
+        fly_left5 = setup("/animals/parrot/fly_left5", gp.tileSize, gp.tileSize);
+        fly_left6 = setup("/animals/parrot/fly_left6", gp.tileSize, gp.tileSize);
+        fly_left7 = setup("/animals/parrot/fly_left7", gp.tileSize, gp.tileSize);
+        fly_left8 = setup("/animals/parrot/fly_left8", gp.tileSize, gp.tileSize);
+
+        fly_right1 = setup("/animals/parrot/fly_right1", gp.tileSize, gp.tileSize);
+        fly_right2 = setup("/animals/parrot/fly_right2", gp.tileSize, gp.tileSize);
+        fly_right3 = setup("/animals/parrot/fly_right3", gp.tileSize, gp.tileSize);
+        fly_right4 = setup("/animals/parrot/fly_right4", gp.tileSize, gp.tileSize);
+        fly_right5 = setup("/animals/parrot/fly_right5", gp.tileSize, gp.tileSize);
+        fly_right6 = setup("/animals/parrot/fly_right6", gp.tileSize, gp.tileSize);
+        fly_right7 = setup("/animals/parrot/fly_right7", gp.tileSize, gp.tileSize);
+        fly_right8 = setup("/animals/parrot/fly_right8", gp.tileSize, gp.tileSize);
+
+
+    }
+    @Override
+    public boolean isHorizontalOnlyAttacker() {
+        return true;
+    }
+
+
+    @Override
+    public void setAction() {
+
+
+        // collision handling
+        if (collisionOn) {
+
+            // Only flip direction if NOT hostile or attacking, so chase/attack won't be interrupted
+            if (!hostile && !attacking) {
+                switch(direction) {
+                    case "up":
+                        direction = "down";
+                        facing = "down";
+                        break;
+                    case "down":
+                        direction = "up";
+                        facing = "up";
+                        break;
+                    case "left":
+                        direction = "right";
+                        facing = "right";
+                        break;
+                    case "right":
+                        direction = "left";
+                        facing = "left";
+                        break;
+                }
+            }
+
+            collisionOn = false;
+            // Do NOT return — allow further logic to run
+        }
+
+        // --------------------------------
+        // BLOCK WHILE BUSY
+        // --------------------------------
+        if(attacking || screaming) {
+            return;
+        }
+
+
+        // HOSTILE (AGGRO) BEHAVIOR
+        if(hostile) {
+
+            flying = true;
+            speed = 3;
+            onPath = true;
+
+            searchPath(getGoalCol(gp.player), getGoalRow(gp.player));
+
+
+            return;
+        }
+
+
+        // PASSIVE BEHAVIOR
+        onPath = false;
+        stateCounter++;
+
+        // --------------------------------
+        // DECISION POINT (NOT EVERY FRAME)
+        // --------------------------------
+        if(stateCounter >= decisionInterval) {
+
+            stateCounter = 0;
+            int roll = random.nextInt(100);
+
+            // -------- WALKING STATE --------
+            if(!flying) {
+
+                // 10% scream
+                if(roll < 10) {
+                    screaming = true;
+                    spriteNum = 1;
+                    spriteCounter = 0;
+                    speed = 0;
+                    gp.playSE(38);
+                    return;
+                }
+
+                // 40% take off
+                if(roll < 50) {
+                    flying = true;
+                    speed = 2;
+                }
+            }
+
+            // -------- FLYING STATE --------
+            else {
+
+                // 60% chance to land
+                if(roll < 10) {
+                    flying = false;
+                    speed = defaultSpeed;
+                }
+            }
+        }
+
+
+        // MOVEMENT
+        if(!flying) {
+            speed = defaultSpeed;
+            getRandomDirection(120);
+        }
+        else {
+            speed = 2;
+            getRandomDirection(80);
+        }
+    }
+
+
+    @Override
+    public void damageReaction() {
+
+        hostile = true;
+        flying = true;
+        speed = 3;
+        onPath = true;
+        gp.playSE(39);
+    }
+
+
+
+    public void checkDrop() {
+
+        int i = random.nextInt(100) + 1;
+
+        if(i <= 60) {
+
+            dropItem(new OBJ_Chicken(gp));
+        }
+        else {
+
+            dropItem(new OBJ_Chicken(gp));
+        }
+
+    }
+
+    @Override
+    public BufferedImage getCurrentImage() {
+
+        BufferedImage image = null;
+
+
+        // ATTACKING
+        if(attacking) {
+
+            if(facing.equals("left")) {
+                image = switch(spriteNum) {
+                    case 1 -> attackLeft1;
+                    case 2 -> attackLeft2;
+                    case 3 -> attackLeft3;
+                    case 4 -> attackLeft4;
+                    default -> attackLeft1;
+                };
+            } else {
+                image = switch(spriteNum) {
+                    case 1 -> attackRight1;
+                    case 2 -> attackRight2;
+                    case 3 -> attackRight3;
+                    case 4 -> attackRight4;
+                    default -> attackRight1;
+                };
+            }
+            return image;
+        }
+
+
+
+        // SCREAMING
+        if(screaming) {
+
+            if(direction.equals("left")) {
+                image = switch(spriteNum) {
+                    case 1 -> scream_left_1;
+                    case 2 -> scream_left_2;
+                    case 3 -> scream_left_3;
+                    case 4 -> scream_left_4;
+                    case 5 -> scream_left_5;
+                    case 6 -> scream_left_6;
+                    case 7 -> scream_left_7;
+                    default -> scream_left_1;
+                };
+            }
+            else {
+                image = switch(spriteNum) {
+                    case 1 -> scream_right_1;
+                    case 2 -> scream_right_2;
+                    case 3 -> scream_right_3;
+                    case 4 -> scream_right_4;
+                    case 5 -> scream_right_5;
+                    case 6 -> scream_right_6;
+                    case 7 -> scream_right_7;
+                    default -> scream_right_1;
+                };
+            }
+            return image;
+        }
+        // Chance to LAND while flying (return to walking)
+        if(flying && random.nextInt(100) < 1) { // 20% chance
+            flying = false;
+            speed = defaultSpeed;
+        }
+
+        // FLYING
+        if(flying) {
+
+            if(direction.equals("left")) {
+                image = switch(spriteNum) {
+                    case 1 -> fly_left1;
+                    case 2 -> fly_left2;
+                    case 3 -> fly_left3;
+                    case 4 -> fly_left4;
+                    case 5 -> fly_left5;
+                    case 6 -> fly_left6;
+                    case 7 -> fly_left7;
+                    case 8 -> fly_left8;
+                    default -> fly_left1;
+                };
+            }
+            else {
+                image = switch(spriteNum) {
+                    case 1 -> fly_right1;
+                    case 2 -> fly_right2;
+                    case 3 -> fly_right3;
+                    case 4 -> fly_right4;
+                    case 5 -> fly_right5;
+                    case 6 -> fly_right6;
+                    case 7 -> fly_right7;
+                    case 8 -> fly_right8;
+                    default -> fly_right1;
+                };
+            }
+            return image;
+        }
+
+        // WALKING
+        if(direction.equals("left")) {
+            image = switch(spriteNum) {
+                case 1 -> left1;
+                case 2 -> left2;
+                case 3 -> left3;
+                case 4 -> left4;
+                case 5 -> left5;
+                case 6 -> left6;
+                case 7 -> left7;
+                case 8 -> left8;
+                default -> left1;
+            };
+        }
+        else {
+            image = switch(spriteNum) {
+                case 1 -> right1;
+                case 2 -> right2;
+                case 3 -> right3;
+                case 4 -> right4;
+                case 5 -> right5;
+                case 6 -> right6;
+                case 7 -> right7;
+                case 8 -> right8;
+                default -> right1;
+            };
+        }
+
+        return image;
+    }
+}

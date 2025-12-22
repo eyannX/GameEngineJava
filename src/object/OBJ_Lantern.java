@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Lantern extends Entity {
 
     public static final String objName = "Lantern";
@@ -17,5 +19,9 @@ public class OBJ_Lantern extends Entity {
         description = "[Lantern]\nIlluminates your \nsurroundings.";
         price = 200;
         lightRadius = 350;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

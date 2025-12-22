@@ -20,9 +20,6 @@ public class Chicken extends Entity {
 
 
 
-    BufferedImage eat_left_1, eat_left_2, eat_left_3, eat_left_4, eat_left_5, eat_left_6, eat_left_7, eat_left_8;
-    BufferedImage eat_right_1, eat_right_2, eat_right_3, eat_right_4, eat_right_5, eat_right_6, eat_right_7, eat_right_8;
-
     public Chicken(GamePanel gp) {
 
         super(gp);
@@ -90,86 +87,128 @@ public class Chicken extends Entity {
     }
 
 
+    @Override
     public void setAction() {
 
-        //  HIT REACTION
-        if (inHitReaction) {
-
-            hitReactionCounter++;
-            speed = defaultSpeed + 1;
-
-            if (hitReactionCounter > 300) {
-                inHitReaction = false;
-                hitReactionCounter = 0;
-                speed = defaultSpeed;
-            }
-        }
-
-        //  EATING
-        if (eating) {
-
-            eatingCounter++;
+    /* =========================
+       1. DYING SAFETY
+       ========================= */
+        if(dying) {
             speed = 0;
-
-            maxSpriteNum = 8;
-
-            if (eatingCounter >= maxSpriteNum * 12) {
-                eating = false;
-                eatingCounter = 0;
-                speed = defaultSpeed;
-                spriteNum = 1;
-                maxSpriteNum = 4;
-            }
-
-            // Eating should stop movement, but NOT collision logic
+            return;
         }
 
-        // RANDOM MOVEMENT (only if not reacting or eating)
-        if (!inHitReaction && !eating) {
-
-            actionLockCounter++;
-
-            if (actionLockCounter >= 120) {
-
-                if (random.nextInt(100) < 20) {
-                    eating = true;
-                    spriteNum = 1;
-                    eatingCounter = 0;
-                    maxSpriteNum = 8;
-                    actionLockCounter = 0;
-                    return;
-                }
-
-                int i = random.nextInt(100);
-
-                if (i < 25) direction = "up";
-                else if (i < 50) direction = "down";
-                else if (i < 75) {
-                    direction = "left";
-                    facing = "left";
-                }
-                else {
-                    direction = "right";
-                    facing = "right";
-                }
-
-                actionLockCounter = 0;
-            }
-        }
-
-        // COLLISION RESPONSE
+    /* =========================
+       2. COLLISION RESPONSE (TOP PRIORITY)
+       ========================= */
         if (collisionOn) {
 
             switch(direction) {
                 case "up":    direction = "down"; break;
                 case "down":  direction = "up"; break;
-                case "left":  direction = "right"; facing = "right"; break;
-                case "right": direction = "left";  facing = "left";  break;
+                case "left":
+                    direction = "right";
+                    facing = "right";
+                    break;
+                case "right":
+                    direction = "left";
+                    facing = "left";
+                    break;
             }
 
             collisionOn = false;
+            // DO NOT return — allow hurt / movement to continue
+        }
+
+    /* =========================
+       3. HIT REACTION
+       ========================= */
+        if(inHitReaction) {
+
+            hitReactionCounter++;
+            speed = defaultSpeed + 1;
+
+            // move in current direction (DO NOT re-force facing)
+            if(hitReactionCounter > 300) {
+                inHitReaction = false;
+                hitReactionCounter = 0;
+                speed = defaultSpeed;
+            }
+
+            return;
+        }
+
+    /* =========================
+       4. EATING STATE
+       ========================= */
+        if(eating) {
+
+            speed = 0;
+            direction = facing;
+            maxSpriteNum = 8;
+
+
+            spriteCounter++;
+            if(spriteCounter > 12) {
+                spriteNum++;
+                if(spriteNum > maxSpriteNum){
+                    spriteNum = 1;
+                    gp.playSE(37);
+                }
+                spriteCounter = 0;
+            }
+
+            eatingCounter++;
+            if(eatingCounter >= maxSpriteNum * 12) {
+                eating = false;
+
+                eatingCounter = 0;
+                spriteNum = 1;
+                maxSpriteNum = 4;
+                speed = defaultSpeed;
+            }
+
+            return;
+        }
+
+    /* =========================
+       5. RANDOM WANDER
+       ========================= */
+        actionLockCounter++;
+
+        if(actionLockCounter >= 120) {
+
+            if(random.nextInt(100) < 20) {
+                eating = true;
+                spriteNum = 1;
+                spriteCounter = 0;
+                eatingCounter = 0;
+                maxSpriteNum = 8;
+                actionLockCounter = 0;
+                return;
+            }
+
+            int i = random.nextInt(100);
+
+            if(i < 25) {
+                direction = "up";
+            }
+            else if(i < 50) {
+                direction = "down";
+            }
+            else if(i < 75) {
+                direction = "left";
+                facing = "left";
+            }
+            else {
+                direction = "right";
+                facing = "right";
+            }
+
+            actionLockCounter = 0;
         }
     }
+
 
 
 
@@ -189,6 +228,7 @@ public class Chicken extends Entity {
         hitReactionCounter = 0;
         speed = defaultSpeed + 1;
 
+        gp.playSE(36);
 
     }
 
@@ -198,65 +238,60 @@ public class Chicken extends Entity {
         int i = random.nextInt(100) + 1;
 
         if(i <= 60) {
-            dropItem(new OBJ_Exp(gp));
+
+            dropItem(new OBJ_Chicken(gp));
         }
         else {
-            dropItem(new OBJ_HungerBar(gp));
+
+            dropItem(new OBJ_Chicken(gp));
         }
 
     }
 
-
-    public void draw(Graphics2D g2) {
-
-        BufferedImage image = null;
-
-
+    @Override
+    public BufferedImage getCurrentImage() {
 
         if(eating) {
-
             if(facing.equals("left")) {
-                if(spriteNum == 1) image = eat_left_1;
-                if(spriteNum == 2) image = eat_left_2;
-                if(spriteNum == 3) image = eat_left_3;
-                if(spriteNum == 4) image = eat_left_4;
-                if(spriteNum == 5) image = eat_left_5;
-                if(spriteNum == 6) image = eat_left_6;
-                if(spriteNum == 7) image = eat_left_7;
-                if(spriteNum == 8) image = eat_left_8;
+                return switch(spriteNum) {
+                    case 1 -> eat_left_1;
+                    case 2 -> eat_left_2;
+                    case 3 -> eat_left_3;
+                    case 4 -> eat_left_4;
+                    case 5 -> eat_left_5;
+                    case 6 -> eat_left_6;
+                    case 7 -> eat_left_7;
+                    default -> eat_left_8;
+                };
             } else {
-                if(spriteNum == 1) image = eat_right_1;
-                if(spriteNum == 2) image = eat_right_2;
-                if(spriteNum == 3) image = eat_right_3;
-                if(spriteNum == 4) image = eat_right_4;
-                if(spriteNum == 5) image = eat_right_5;
-                if(spriteNum == 6) image = eat_right_6;
-                if(spriteNum == 7) image = eat_right_7;
-                if(spriteNum == 8) image = eat_right_8;
-            }
-
-        } else {
-
-            if(facing.equals("left")) {
-                if(spriteNum == 1) image = left1;
-                if(spriteNum == 2) image = left2;
-                if(spriteNum == 3) image = left3;
-                if(spriteNum == 4) image = left4;
-            }
-            else {
-                if(spriteNum == 1) image = right1;
-                if(spriteNum == 2) image = right2;
-                if(spriteNum == 3) image = right3;
-                if(spriteNum == 4) image = right4;
+                return switch(spriteNum) {
+                    case 1 -> eat_right_1;
+                    case 2 -> eat_right_2;
+                    case 3 -> eat_right_3;
+                    case 4 -> eat_right_4;
+                    case 5 -> eat_right_5;
+                    case 6 -> eat_right_6;
+                    case 7 -> eat_right_7;
+                    default -> eat_right_8;
+                };
             }
         }
 
-
-
-        int screenX = (int)(worldX - gp.player.worldX + gp.player.screenX);
-        int screenY = (int)(worldY - gp.player.worldY + gp.player.screenY);
-
-        g2.drawImage(image, screenX, screenY, gp.tileSize, gp.tileSize, null);
+        if(facing.equals("left")) {
+            return switch(spriteNum) {
+                case 1 -> left1;
+                case 2 -> left2;
+                case 3 -> left3;
+                default -> left4;
+            };
+        } else {
+            return switch(spriteNum) {
+                case 1 -> right1;
+                case 2 -> right2;
+                case 3 -> right3;
+                default -> right4;
+            };
+        }
     }
 
 

@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Key extends Entity {
 
     GamePanel gp;
@@ -42,5 +44,9 @@ public class OBJ_Key extends Entity {
             startDialogue(this,1);
             return false;
         }
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

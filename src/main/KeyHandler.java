@@ -6,9 +6,11 @@ import java.awt.event.KeyListener;
 public class KeyHandler implements KeyListener {
 
     GamePanel gp;
-    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed;
+    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed;
+
     //DEBUG
     public boolean showDebugText = false;
+    public boolean showCollisionBox = false;
     public boolean cheat = false;
 
     @Override
@@ -21,6 +23,7 @@ public class KeyHandler implements KeyListener {
     }
     @Override
     public void keyPressed(KeyEvent e) {
+
         int code = e.getKeyCode();
 
         //TITLE STATE
@@ -203,18 +206,26 @@ public class KeyHandler implements KeyListener {
         }
 
         //DEBUG
-        /*
-        if(code == KeyEvent.VK_T)   //Debug Menu
-        {
-            if(showDebugText == false)
+        if(code == KeyEvent.VK_F3) {
+
+            if(!showCollisionBox) {
+                showCollisionBox = true;
+            }
+            else
+            {
+                showCollisionBox = false;
+            }
+
+
+            if(!showDebugText)
             {
                 showDebugText = true;
             }
-            else if(showDebugText == true)
-            {
+            else {
                 showDebugText = false;
             }
         }
+
         if(code == KeyEvent.VK_R)   //Refresh Map without restarting game // Save Map File : in IntellijIDE "Ctrl + F9", in Eclipce "Ctrl + S"
         {
             switch (gp.currentMap)
@@ -223,17 +234,15 @@ public class KeyHandler implements KeyListener {
                 case 1: gp.tileM.loadMap("/maps/interior01.txt",1); break;
             }
         }
-        if(code == KeyEvent.VK_G)   //Debug Menu
-        {
-            if(godModeOn == false)
+        if(code == KeyEvent.VK_L) {
+            if(!cheat)
             {
-                godModeOn = true;
+                cheat = true;
             }
-            else if(godModeOn == true)
-            {
-                godModeOn = false;
+            else {
+                cheat = false;
             }
-        }*/
+        }
     }
     public void pauseState(int code)
     {
@@ -255,7 +264,9 @@ public class KeyHandler implements KeyListener {
 
             gp.gameState = gp.playState;
         }
-
+        if(code == KeyEvent.VK_Q){
+            dropKeyPressed = true;
+        }
         if(code == KeyEvent.VK_ENTER) {
 
             gp.player.selectItem();
@@ -520,6 +531,9 @@ public class KeyHandler implements KeyListener {
         if(code == KeyEvent.VK_SPACE)
         {
             spacePressed = false;
+        }
+        if(code == KeyEvent.VK_Q){
+            dropKeyPressed = false;
         }
     }
 }

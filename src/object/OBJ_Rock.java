@@ -5,6 +5,7 @@ import entity.Projectile;
 import main.GamePanel;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class OBJ_Rock extends Projectile {
 
@@ -69,5 +70,9 @@ public class OBJ_Rock extends Projectile {
     {
         int maxLife = 20;
         return maxLife;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

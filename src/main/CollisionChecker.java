@@ -1,6 +1,9 @@
 package main;
 
 import entity.Entity;
+import tile_interactive.TallInteractiveObject;
+
+import java.awt.*;
 
 public class CollisionChecker {
     GamePanel gp;
@@ -189,6 +192,49 @@ public class CollisionChecker {
         }
         return index;
     }
+    public void checkTallObject(Entity entity, TallInteractiveObject[] tallObjs) {
+
+        String direction = entity.direction;
+        if(entity.knockBack) {
+            direction = entity.knockBackDirection;
+        }
+
+        // Predict next position (just like other checks)
+        int nextX = (int)(entity.worldX + entity.solidArea.x);
+        int nextY = (int)(entity.worldY + entity.solidArea.y);
+
+        switch (direction) {
+            case "up"    -> nextY -= entity.speed;
+            case "down"  -> nextY += entity.speed;
+            case "left"  -> nextX -= entity.speed;
+            case "right" -> nextX += entity.speed;
+        }
+
+        Rectangle entityArea = new Rectangle(
+                nextX,
+                nextY,
+                entity.solidArea.width,
+                entity.solidArea.height
+        );
+
+        for (TallInteractiveObject obj : tallObjs) {
+
+            if (obj == null) continue;
+
+            Rectangle objArea = new Rectangle(
+                    (int)(obj.worldX + obj.solidArea.x),
+                    (int)(obj.worldY + obj.solidArea.y),
+                    obj.solidArea.width,
+                    obj.solidArea.height
+            );
+
+            if (entityArea.intersects(objArea)) {
+                entity.collisionOn = true;
+                return;
+            }
+        }
+    }
+
     public boolean checkPlayer(Entity entity) {
 
         boolean contactPlayer = false;

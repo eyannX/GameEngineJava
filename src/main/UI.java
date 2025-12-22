@@ -91,7 +91,7 @@ public class UI {
         {
             //currentDialogue = npc.dialogues[npc.dialogueSet][npc.dialogueIndex];//For display text once, enable this and disable letter by letter.(Letter by letter: The if statement below there)
 
-            char characters[] = npc.dialogues[npc.dialogueSet][npc.dialogueIndex].toCharArray();
+            char[] characters = npc.dialogues[npc.dialogueSet][npc.dialogueIndex].toCharArray();
 
             if(charIndex < characters.length)
             {
@@ -307,16 +307,20 @@ public class UI {
         {
 
             //EQUIP CURSOR
-
             if(entity.inventory.get(i) == entity.currentWeapon ||
                     entity.inventory.get(i) == entity.currentShield || entity.inventory.get(i) == entity.currentLight)
             {
-
 //                g2.setColor(new Color(63, 36, 16));
 //                g2.fillRoundRect(slotX +10,slotY + gp.tileSize, gp.tileSize, gp.tileSize,10,10 );
             }
 
-            g2.drawImage(entity.inventory.get(i).down1, slotX,slotY + gp.tileSize + 32,null);  //draw item
+            //DROP ITEM
+            if(gp.keyH.dropKeyPressed ) {
+                gp.ui.dropItem(gp.player);
+                gp.keyH.dropKeyPressed = false;
+            }
+
+            g2.drawImage(entity.inventory.get(i).down1, slotX,slotY + gp.tileSize + 32, gp.tileSize, gp.tileSize, null);  //draw item
 
             //DISPLAY AMOUNT
             if(entity == gp.player && entity.inventory.get(i).amount > 1) {
@@ -351,8 +355,8 @@ public class UI {
         }
 
         //CURSOR
-        if(cursor)
-        {
+        if(cursor) {
+
             int cursorX = slotXstart + (slotSize * slotCol);
             int cursorY = slotYstart + (slotSize * slotRow) + gp.tileSize + 32;
             int cursorWidth = gp.tileSize + 5;
@@ -387,8 +391,67 @@ public class UI {
                     textY += 32;
                 }
             }
+
+
         }
     }
+    public void dropItem(Entity entity) {
+
+        // Safety: inventory does not exist or empty
+        if(entity.inventory == null || entity.inventory.isEmpty()) {
+            return;
+        }
+
+        // Safety: invalid cursor
+        if(playerSlotCol < 0 || playerSlotRow < 0) {
+            return;
+        }
+
+        int itemIndex = getItemIndexOnSlot(playerSlotCol, playerSlotRow);
+
+        // Safety: cursor on empty slot
+        if(itemIndex < 0 || itemIndex >= entity.inventory.size()) {
+            return;
+        }
+
+        Entity item = entity.inventory.get(itemIndex);
+
+        // Safety: cannot drop equipped items
+        if(item == entity.currentWeapon ||
+                item == entity.currentShield ||
+                item == entity.currentLight) {
+            return;
+        }
+
+        Entity droppedItem = gp.eGenerator.getObject(item.name);
+
+        int worldX = (int) gp.player.worldX;
+        int worldY = (int) gp.player.worldY;
+
+        switch(gp.player.direction) {
+            case "up":    worldY -= gp.tileSize; break;
+            case "down":  worldY += gp.tileSize; break;
+            case "left":  worldX -= gp.tileSize; break;
+            case "right": worldX += gp.tileSize; break;
+        }
+
+        droppedItem.worldX = worldX;
+        droppedItem.worldY = worldY;
+
+        for(int i = 0; i < gp.obj[gp.currentMap].length; i++) {
+            if(gp.obj[gp.currentMap][i] == null) {
+                gp.obj[gp.currentMap][i] = droppedItem;
+                break;
+            }
+        }
+
+        if(item.amount > 1) {
+            item.amount--;
+        } else {
+            entity.inventory.remove(itemIndex);
+        }
+    }
+
     public void drawTransition() {
         counter++;
         g2.setColor(new Color(0,0,0,counter*5));

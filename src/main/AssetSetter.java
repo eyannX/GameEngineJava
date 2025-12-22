@@ -1,12 +1,14 @@
 package main;
 
 import animals.Chicken;
+import animals.Parrot;
 import data.Progress;
 import entity.NPC_BigRock;
 import entity.NPC_Merchant;
 import entity.NPC_OldMan;
 import monster.*;
 import object.*;
+import tile_interactive.IT_BigTree;
 import tile_interactive.IT_DestructibleWall;
 import tile_interactive.IT_DryTree;
 import tile_interactive.IT_MetalPlate;
@@ -107,9 +109,9 @@ public class AssetSetter {
         int i = 0;
 
         //MAP = 0
-        gp.npc[mapNum][i] = new NPC_OldMan(gp);
-        gp.npc[mapNum][i].worldX = gp.tileSize*21;
-        gp.npc[mapNum][i].worldY = gp.tileSize*21;
+//        gp.npc[mapNum][i] = new NPC_OldMan(gp);
+//        gp.npc[mapNum][i].worldX = gp.tileSize*21;
+//        gp.npc[mapNum][i].worldY = gp.tileSize*21;
         i++;
 
         //MAP = 1
@@ -188,7 +190,7 @@ public class AssetSetter {
         gp.monster[mapNum][i].worldY = gp.tileSize*9;
         i++;
 
-        gp.monster[mapNum][i] = new Chicken(gp);
+        gp.monster[mapNum][i] = new Parrot(gp);
         gp.monster[mapNum][i].worldX = gp.tileSize*23;
         gp.monster[mapNum][i].worldY = gp.tileSize*23;
         i++;
@@ -244,6 +246,9 @@ public class AssetSetter {
         gp.iTile[mapNum][i] = new IT_DryTree(gp,32,12);i++;
         gp.iTile[mapNum][i] = new IT_DryTree(gp,33,12);i++;
 
+
+
+
         gp.iTile[mapNum][i] = new IT_DryTree(gp,18,40);i++;
         gp.iTile[mapNum][i] = new IT_DryTree(gp,17,40);i++;
         gp.iTile[mapNum][i] = new IT_DryTree(gp,16,40);i++;
@@ -282,5 +287,12 @@ public class AssetSetter {
         gp.iTile[mapNum][i] = new IT_MetalPlate(gp,39,31);i++;
 
 
+    }
+    public void setTallObject(){
+
+        int mapNum = 0;
+        int i = 0;
+
+        gp.tallObj[mapNum][i] = new IT_BigTree(gp, 22, 22); i++;
     }
 }

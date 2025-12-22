@@ -7,6 +7,7 @@ import object.OBJ_Heart;
 import object.OBJ_HungerBar;
 import object.OBJ_Rock;
 
+import java.awt.image.BufferedImage;
 import java.util.Random;
 
 public class MON_RedSlime extends Entity {
@@ -53,7 +54,7 @@ public class MON_RedSlime extends Entity {
     }
     public void setAction()
     {
-        if(onPath == true)
+        if(onPath)
         {
 
             //Check if it stops chasing
@@ -98,5 +99,25 @@ public class MON_RedSlime extends Entity {
         {
             dropItem(new OBJ_HungerBar(gp));
         }
+    }
+    @Override
+    public BufferedImage getCurrentImage() {
+
+        if(attacking) {
+            return switch(direction) {
+                case "up"    -> (spriteNum == 1 ? attackUp1 : attackUp2);
+                case "down"  -> (spriteNum == 1 ? attackDown1 : attackDown2);
+                case "left"  -> (spriteNum == 1 ? attackLeft1 : attackLeft2);
+                case "right" -> (spriteNum == 1 ? attackRight1 : attackRight2);
+                default -> null;
+            };
+        }
+
+        return getDirectionalImage(
+                up1, up2,
+                down1, down2,
+                left1, left2,
+                right1, right2
+        );
     }
 }

@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Axe extends Entity {
 
     public static final String objName = "Woodcutter's Axe";
@@ -20,5 +22,9 @@ public class OBJ_Axe extends Entity {
         knockBackPower = 5;
         motion1_duration = 20;
         motion2_duration = 40;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

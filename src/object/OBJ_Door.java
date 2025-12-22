@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Door extends Entity {
 
     GamePanel gp;
@@ -25,6 +27,10 @@ public class OBJ_Door extends Entity {
         solidAreaDefaultY = solidArea.y;
         price = 35;
         setDialogue();
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
     public void setDialogue()
     {

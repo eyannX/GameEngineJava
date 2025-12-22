@@ -3,6 +3,8 @@ package object;
 import entity.Entity;
 import main.GamePanel;
 
+import java.awt.image.BufferedImage;
+
 public class OBJ_Exp extends Entity {
 
     GamePanel gp;
@@ -24,5 +26,9 @@ public class OBJ_Exp extends Entity {
         gp.ui.addMessage("exp +" + value);
         entity.exp += value;
         return true;
+    }
+    public BufferedImage getCurrentImage() {
+
+        return down1;
     }
 }

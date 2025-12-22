@@ -3,13 +3,14 @@ package entity;
 import main.GamePanel;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.Random;
 
 
 public class NPC_OldMan extends Entity{
 
-    public NPC_OldMan(GamePanel gp)
-    {
+    public NPC_OldMan(GamePanel gp) {
+
         super(gp);
         direction = "down";
         speed = 1;
@@ -104,6 +105,26 @@ public class NPC_OldMan extends Entity{
             }
         }
     }
+    @Override
+    public BufferedImage getCurrentImage() {
+
+        if(attacking) {
+            return switch(direction) {
+                case "up"    -> (spriteNum == 1 ? attackUp1 : attackUp2);
+                case "down"  -> (spriteNum == 1 ? attackDown1 : attackDown2);
+                case "left"  -> (spriteNum == 1 ? attackLeft1 : attackLeft2);
+                case "right" -> (spriteNum == 1 ? attackRight1 : attackRight2);
+                default -> null;
+            };
+        }
+
+        return getDirectionalImage(
+                up1, up2,
+                down1, down2,
+                left1, left2,
+                right1, right2
+        );
+    }
     public void speak()
     {
         //ENTITY CLASS SPEAK()
@@ -126,4 +147,5 @@ public class NPC_OldMan extends Entity{
         //follow me, come with me  or something like that
         //onPath = true;
     }
+
 }
