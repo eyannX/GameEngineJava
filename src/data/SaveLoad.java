@@ -132,7 +132,7 @@ public class SaveLoad {
                             gp.obj[mapNum][i].setLoot(gp.eGenerator.getObject(ds.mapObjectLootNames[mapNum][i]));
                         }
                         gp.obj[mapNum][i].opened = ds.mapObjectOpened[mapNum][i];
-                        if(gp.obj[mapNum][i].opened == true)
+                        if(gp.obj[mapNum][i].opened)
                         {
                             gp.obj[mapNum][i].down1 = gp.obj[mapNum][i].image2;
                         }
@@ -142,7 +142,7 @@ public class SaveLoad {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Load Exception!");
+            System.out.println("BUG BUG BUG BUG BUG BUG BUG BUG Load Exception!");
         }
     }
 }

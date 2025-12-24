@@ -171,9 +171,8 @@ public class Chicken extends Entity {
             return;
         }
 
-    /* =========================
-       5. RANDOM WANDER
-       ========================= */
+
+      //RANDOM WANDER
         actionLockCounter++;
 
         if(actionLockCounter >= 120) {
@@ -206,6 +205,17 @@ public class Chicken extends Entity {
             }
 
             actionLockCounter = 0;
+        }
+    }
+    @Override
+    protected int getAnimationSpeed() {
+
+        if (eating) {
+            animationSpeed = 12;
+            return animationSpeed;
+        }
+        else {
+            return 8;
         }
     }
 

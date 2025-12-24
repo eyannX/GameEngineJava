@@ -6,7 +6,7 @@ import java.awt.event.KeyListener;
 public class KeyHandler implements KeyListener {
 
     GamePanel gp;
-    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed;
+    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed, escPressed;
 
     //DEBUG
     public boolean showDebugText = false;
@@ -70,6 +70,12 @@ public class KeyHandler implements KeyListener {
         {
             mapState(code);
         }
+        else if (gp.gameState == gp.chestState) {
+            chestState(code);
+            System.out.println("Cursor on chest? " + gp.ui.cursorOnChest + " chestSlot: " + gp.ui.chestSlotRow + "," + gp.ui.chestSlotCol + " playerSlot: " + gp.ui.playerSlotRow + "," + gp.ui.playerSlotCol);
+
+        }
+
     }
 
     public void titleState(int code)
@@ -207,6 +213,8 @@ public class KeyHandler implements KeyListener {
 
         //DEBUG
         if(code == KeyEvent.VK_F3) {
+
+
 
             if(!showCollisionBox) {
                 showCollisionBox = true;
@@ -464,6 +472,64 @@ public class KeyHandler implements KeyListener {
             }
         }
     }
+    public void chestState(int code) {
+
+        // MOVE CURSOR
+        if (code == KeyEvent.VK_W) moveChestCursor(-1, 0);
+        if (code == KeyEvent.VK_S) moveChestCursor(1, 0);
+        if (code == KeyEvent.VK_A) moveChestCursor(0, -1);
+        if (code == KeyEvent.VK_D) moveChestCursor(0, 1);
+
+        // TRANSFER
+        if (code == KeyEvent.VK_ENTER) {
+            gp.ui.transferItem();
+        }
+
+        // CLOSE
+        if (code == KeyEvent.VK_E) {
+            ((object.OBJ_StorageChest) gp.ui.openedChest).closeChest();
+        }
+    }
+    private void moveChestCursor(int rowDelta, int colDelta) {
+        if (gp.ui.cursorOnChest) {
+            gp.ui.chestSlotRow += rowDelta;
+            gp.ui.chestSlotCol += colDelta;
+
+            // Wrap to player inventory if moving left out of bounds
+            if (gp.ui.chestSlotCol < 0) {
+                gp.ui.cursorOnChest = false;
+                gp.ui.playerSlotCol = 4;  // last col of player inventory
+                // Optional: set playerSlotRow to current chestSlotRow or 0
+                gp.ui.playerSlotRow = Math.min(gp.ui.chestSlotRow, 3);
+            }
+        } else {
+            gp.ui.playerSlotRow += rowDelta;
+            gp.ui.playerSlotCol += colDelta;
+
+            // Wrap to chest inventory if moving right out of bounds
+            if (gp.ui.playerSlotCol > 4) {
+                gp.ui.cursorOnChest = true;
+                gp.ui.chestSlotCol = 0;
+                // Optional: set chestSlotRow to current playerSlotRow or 0
+                gp.ui.chestSlotRow = Math.min(gp.ui.playerSlotRow, 3);
+            }
+        }
+
+        // Clamp row/col for chest and player inventories
+        gp.ui.chestSlotRow = clamp(gp.ui.chestSlotRow, 0, 3);
+        gp.ui.chestSlotCol = clamp(gp.ui.chestSlotCol, 0, 4);
+        gp.ui.playerSlotRow = clamp(gp.ui.playerSlotRow, 0, 3);
+        gp.ui.playerSlotCol = clamp(gp.ui.playerSlotCol, 0, 4);
+
+        gp.playSE(9);  // cursor sound
+    }
+
+
+
+    private int clamp(int v, int min, int max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
     public void npcInventory(int code)
     {
         if(code == KeyEvent.VK_W)

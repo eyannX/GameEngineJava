@@ -74,6 +74,7 @@ public class MON_BugleMonster extends Entity {
     }
 
 
+
     public void damageReaction() {
         actionLockCounter = 0;
         //direction = gp.player.direction;
@@ -101,15 +102,7 @@ public class MON_BugleMonster extends Entity {
     @Override
     public BufferedImage getCurrentImage() {
 
-        if(attacking) {
-            return switch(direction) {
-                case "up"    -> (spriteNum == 1 ? attackUp1 : attackUp2);
-                case "down"  -> (spriteNum == 1 ? attackDown1 : attackDown2);
-                case "left"  -> (spriteNum == 1 ? attackLeft1 : attackLeft2);
-                case "right" -> (spriteNum == 1 ? attackRight1 : attackRight2);
-                default -> null;
-            };
-        }
+
 
         return getDirectionalImage(
                 up1, up2,

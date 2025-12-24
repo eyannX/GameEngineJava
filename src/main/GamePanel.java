@@ -92,6 +92,7 @@ public class GamePanel extends JPanel implements Runnable{
     public final int sleepState = 9;
     public final int mapState = 10;
     public final int cutsceneState = 11;
+    public final int chestState = 12;
 
     //OTHERS
     public boolean bossBattleOn = false;
@@ -322,12 +323,17 @@ public class GamePanel extends JPanel implements Runnable{
             }
         }
 
-        // SMALL INTERACTIVE TILES (1x1)
-        for (int i = 0; i < iTile[currentMap].length; i++) {
-            if (iTile[currentMap][i] != null) {
-                entityList.add(iTile[currentMap][i]);
+
+//        for (int i = 0; i < iTile[currentMap].length; i++) {
+//            if (iTile[currentMap][i] != null) {
+//                entityList.add(iTile[currentMap][i]);
+//            }
+//        }
+        //            //INTERACTIVE TILE
+            for(int i = 0; i < iTile[1].length; i++) {
+
+                if(iTile[currentMap][i] != null) {iTile[currentMap][i].draw(g2);}
             }
-        }
 
         // TALL OBJECT TRUNKS
         for (int i = 0; i < tallObj[currentMap].length; i++) {
@@ -427,7 +433,7 @@ public class GamePanel extends JPanel implements Runnable{
             g2.setColor(Color.white);
 
             int x = 10;
-            int y = 400;
+            int y = 200;
             int lh = 20;
 
             g2.drawString("WorldX " + (int) player.worldX, x, y); y += lh;
@@ -436,6 +442,18 @@ public class GamePanel extends JPanel implements Runnable{
             g2.drawString("Row " + (int) (player.worldY + player.solidArea.y) / tileSize, x, y); y += lh;
             g2.drawString("Map " + currentMap, x, y); y += lh;
             g2.drawString("Draw time: " + passed, x, y);
+
+            //drawing path
+            g2.setColor(new Color(111,140,150,70));
+            for(int i = 0; i < pFinder.pathList.size(); i++)
+            {
+                int worldX = pFinder.pathList.get(i).col * tileSize;
+                int worldY = pFinder.pathList.get(i).row * tileSize;
+                int screenX = (int) (worldX - player.worldX + player.screenX);
+                int screenY = (int) (worldY - player.worldY + player.screenY);
+
+                g2.fillRect(screenX,screenY,tileSize, tileSize);
+            }
         }
     }
 

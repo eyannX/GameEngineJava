@@ -13,28 +13,16 @@ public class Parrot extends Entity {
     GamePanel gp;
     Random random = new Random();
 
-    // States
-
-    // Timers
-    int screamCounter = 0;
-    int screamDuration = 45; // ~0.75s if 60 FPS
-
-    // Animation control
-    int maxWalkFrames = 8;
-    int maxFlyFrames = 8;
-    int maxScreamFrames = 7;
-    int maxAttackFrames = 4;
-
-
-    int spriteSpeed = 10;        // How many ticks before advancing frame (e.g. 10 = ~6 frames per second)
-
-
 
     // AI timing
     int stateCounter = 0;
     int decisionInterval = 120; // 2 seconds at 60 FPS
 
+    //debug
+    public boolean debugDrawAttackArea = true;
 
+
+    private boolean damageDealtThisAttack = false;
 
     public BufferedImage scream_right_1,scream_right_2, scream_right_3, scream_right_4, scream_right_5, scream_right_6, scream_right_7;
     public BufferedImage scream_left_1,scream_left_2, scream_left_3, scream_left_4, scream_left_5, scream_left_6, scream_left_7;
@@ -69,6 +57,11 @@ public class Parrot extends Entity {
         solidArea.height = 40;
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
+
+        attackArea.width = gp.tileSize;      // or some width that fits the parrot's attack reach
+        attackArea.height = gp.tileSize;     // height, maybe smaller if attack is only horizontal
+        attackArea.x = 0;                    // local offset if needed
+        attackArea.y = 0;
 
         getImage();
         getScreamImage();
@@ -152,84 +145,86 @@ public class Parrot extends Entity {
 
 
     }
-    @Override
-    public boolean isHorizontalOnlyAttacker() {
-        return true;
-    }
 
+    @Override
+    public void update() {
+        super.update();  // calls Entity update
+
+
+        checkAttackHit();
+    }
 
     @Override
     public void setAction() {
 
-
-        // collision handling
-        if (collisionOn) {
-
-            // Only flip direction if NOT hostile or attacking, so chase/attack won't be interrupted
-            if (!hostile && !attacking) {
-                switch(direction) {
-                    case "up":
-                        direction = "down";
-                        facing = "down";
-                        break;
-                    case "down":
-                        direction = "up";
-                        facing = "up";
-                        break;
-                    case "left":
-                        direction = "right";
-                        facing = "right";
-                        break;
-                    case "right":
-                        direction = "left";
-                        facing = "left";
-                        break;
-                }
+    /* =========================
+       1. COLLISION RESOLUTION
+       ========================= */
+        if (collisionOn && !attacking) {
+            switch (direction) {
+                case "up"    -> { direction = "down";  facing = "down";  }
+                case "down"  -> { direction = "up";    facing = "up";    }
+                case "left"  -> { direction = "right"; facing = "right"; }
+                case "right" -> { direction = "left";  facing = "left";  }
             }
-
             collisionOn = false;
-            // Do NOT return — allow further logic to run
         }
 
-        // --------------------------------
-        // BLOCK WHILE BUSY
-        // --------------------------------
-        if(attacking || screaming) {
+    /* =========================
+       2. HARD-LOCK STATES
+       ========================= */
+        if (attacking) {
+            speed = 0;
+            onPath = false;
+            flying = false;
             return;
         }
 
+        if (screaming) {
+            speed = 0;
+            onPath = false;
+            return;
+        }
 
-        // HOSTILE (AGGRO) BEHAVIOR
-        if(hostile) {
+    /* =========================
+       3. ATTACK CHECK (TOP PRIORITY)
+       ========================= */
+        checkAttackLeftRight(5, gp.tileSize + 10, 10);
 
+        if (attacking) {
+            spriteNum = 1;
+            spriteCounter = 0;
+            speed = 0;
+            onPath = false;
+            flying = false;
+            return;
+        }
+
+    /* =========================
+       4. HOSTILE BEHAVIOR
+       ========================= */
+        if (hostile) {
             flying = true;
             speed = 3;
             onPath = true;
-
             searchPath(getGoalCol(gp.player), getGoalRow(gp.player));
-
-
             return;
         }
 
-
-        // PASSIVE BEHAVIOR
+    /* =========================
+       5. PASSIVE AI DECISIONS
+       ========================= */
         onPath = false;
         stateCounter++;
 
-        // --------------------------------
-        // DECISION POINT (NOT EVERY FRAME)
-        // --------------------------------
-        if(stateCounter >= decisionInterval) {
-
+        if (stateCounter >= decisionInterval) {
             stateCounter = 0;
             int roll = random.nextInt(100);
 
-            // -------- WALKING STATE --------
-            if(!flying) {
+            if (!flying) {
 
                 // 10% scream
-                if(roll < 10) {
+                if (roll < 10) {
                     screaming = true;
                     spriteNum = 1;
                     spriteCounter = 0;
@@ -239,32 +234,32 @@ public class Parrot extends Entity {
                 }
 
                 // 40% take off
-                if(roll < 50) {
+                if (roll < 50) {
                     flying = true;
                     speed = 2;
+                    return;
                 }
-            }
 
-            // -------- FLYING STATE --------
-            else {
+            } else {
 
-                // 60% chance to land
-                if(roll < 10) {
+                // 10% chance to land
+                if (roll < 10) {
                     flying = false;
                     speed = defaultSpeed;
+                    return;
                 }
             }
         }
 
-
-        // MOVEMENT
-        if(!flying) {
-            speed = defaultSpeed;
-            getRandomDirection(120);
-        }
-        else {
+    /* =========================
+       6. MOVEMENT
+       ========================= */
+        if (flying) {
             speed = 2;
             getRandomDirection(80);
+        } else {
+            speed = defaultSpeed;
+            getRandomDirection(120);
         }
     }
 
@@ -295,6 +290,75 @@ public class Parrot extends Entity {
         }
 
     }
+    @Override
+    protected int getMaxFrame() {
+        return attacking ? 4 :
+                screaming ? 7 :
+                        flying ? 8 : 8;
+    }
+    @Override
+    protected int getAnimationSpeed() {
+
+        // Set animation speed depending on current state
+        if (attacking) {
+            return 6;
+        } else if (screaming) {
+            return 5;
+        } else if (flying) {
+            return 10;
+        } else {
+            return 8;
+        }
+    }
+
+    public void checkAttackHit() {
+
+        if (!damageDealtThisAttack && attacking) {
+
+            // Only apply damage on specific attack frames (e.g., 2 or 3)
+            if (spriteNum == 2 || spriteNum == 3) {
+
+                int currentWorldX = (int) worldX;
+                int currentWorldY = (int) worldY;
+                int solidAreaWidth = solidArea.width;
+                int solidAreaHeight = solidArea.height;
+
+                // Only handle left and right directions
+                if (direction.equals("left")) {
+                    worldX -= attackArea.width;
+                } else if (direction.equals("right")) {
+                    worldX += gp.tileSize;
+                }
+
+                // Adjust solidArea to attackArea size
+                solidArea.width = attackArea.width;
+                solidArea.height = attackArea.height;
+
+                if (gp.cChecker.checkPlayer(this) ) {
+                    damagePlayer(attack);
+                }
+
+                //debug
+                System.out.println("Attacking frame: " + spriteNum);
+                System.out.println("Player detected in attack area? " + gp.cChecker.checkPlayer(this));
+
+
+                // Restore original position and solidArea
+                worldX = currentWorldX;
+                worldY = currentWorldY;
+                solidArea.width = solidAreaWidth;
+                solidArea.height = solidAreaHeight;
+
+                damageDealtThisAttack = true;
+            }
+        }
+
+        if (!attacking) {
+            damageDealtThisAttack = false;
+        }
+    }
+
+
 
     @Override
     public BufferedImage getCurrentImage() {
@@ -424,4 +488,37 @@ public class Parrot extends Entity {
 
         return image;
     }
+    @Override
+    public void draw(Graphics2D g2) {
+        super.draw(g2);  // Draw the parrot normally
+
+        if (debugDrawAttackArea && attacking && (spriteNum == 2 || spriteNum == 3)) {
+            // Calculate the position of the attackArea relative to the screen
+
+            // Get screen coordinates of parrot
+            int screenX = getScreenX();
+            int screenY = getScreenY();
+
+            int attackX = screenX;
+            int attackY = screenY;
+
+            if (direction.equals("left")) {
+                attackX = screenX - attackArea.width;
+            } else if (direction.equals("right")) {
+                attackX = screenX + gp.tileSize;
+            }
+
+            // Draw semi-transparent red rectangle for attackArea
+            Color oldColor = g2.getColor();
+            g2.setColor(new Color(255, 0, 0, 100));  // Red with alpha
+            g2.fillRect(attackX, attackY, attackArea.width, attackArea.height);
+            g2.setColor(oldColor);
+
+            // Optionally, draw a border to make it clearer
+            g2.setColor(Color.RED);
+            g2.drawRect(attackX, attackY, attackArea.width, attackArea.height);
+            g2.setColor(oldColor);
+        }
+    }
+
 }

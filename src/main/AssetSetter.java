@@ -1,14 +1,14 @@
 package main;
 
-import animals.Chicken;
 import animals.Parrot;
+import animals.blue_butterfly;
+import animals.rat;
 import data.Progress;
 import entity.NPC_BigRock;
 import entity.NPC_Merchant;
-import entity.NPC_OldMan;
 import monster.*;
 import object.*;
-import tile_interactive.IT_BigTree;
+import tile_interactive.TIT_BigTree;
 import tile_interactive.IT_DestructibleWall;
 import tile_interactive.IT_DryTree;
 import tile_interactive.IT_MetalPlate;
@@ -54,6 +54,11 @@ public class AssetSetter {
         gp.obj[mapNum][i] = new OBJ_Key(gp);
         gp.obj[mapNum][i].worldX = gp.tileSize * 38;
         gp.obj[mapNum][i].worldY = gp.tileSize * 40;
+        i++;
+
+        gp.obj[mapNum][i] = new OBJ_StorageChest(gp);
+        gp.obj[mapNum][i].worldX = gp.tileSize * 27;
+        gp.obj[mapNum][i].worldY = gp.tileSize * 21;
         i++;
 
         mapNum = 1;//adding object to second map
@@ -195,6 +200,11 @@ public class AssetSetter {
         gp.monster[mapNum][i].worldY = gp.tileSize*23;
         i++;
 
+        gp.monster[mapNum][i] = new rat(gp);
+        gp.monster[mapNum][i].worldX = gp.tileSize*24;
+        gp.monster[mapNum][i].worldY = gp.tileSize*23;
+        i++;
+
         mapNum = 2;
         i = 0;
 
@@ -293,6 +303,6 @@ public class AssetSetter {
         int mapNum = 0;
         int i = 0;
 
-        gp.tallObj[mapNum][i] = new IT_BigTree(gp, 22, 22); i++;
+        gp.tallObj[mapNum][i] = new TIT_BigTree(gp, 22, 22); i++;
     }
 }

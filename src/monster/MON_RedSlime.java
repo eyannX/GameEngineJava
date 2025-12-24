@@ -31,8 +31,8 @@ public class MON_RedSlime extends Entity {
         hostile = true;
 
 
-        solidArea.x = 3;
-        solidArea.y = 18;
+        solidArea.x = 10;
+        solidArea.y = 25;
         solidArea.width = 42;
         solidArea.height = 30;
         solidAreaDefaultX = solidArea.x;

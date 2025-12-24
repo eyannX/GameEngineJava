@@ -380,26 +380,22 @@ public class Player extends Entity{
             return; // important so knockback overrides movement
         }
 
-        // =====================
         // ATTACKING
-        // =====================
         if(attacking) {
             attacking();
             return;
         }
 
-        // =====================
+
         // GUARDING
-        // =====================
         if(keyH.spacePressed) {
             guarding = true;
             guardCounter++;
             return;
         }
 
-        // =====================
+
         // MOVEMENT INPUT
-        // =====================
         boolean moving =
                 keyH.upPressed || keyH.downPressed ||
                         keyH.leftPressed || keyH.rightPressed;
@@ -457,7 +453,6 @@ public class Player extends Entity{
             }
 
             // ATTACK KEY
-            // =====================
             if(keyH.enterPressed && !attackCanceled) {
                 gp.playSE(7);
                 attacking = true;
@@ -854,6 +849,7 @@ public class Player extends Entity{
         }
         return itemIndex;
     }
+
     public boolean canObtainItem(Entity item) {
         boolean canObtain = false;
 

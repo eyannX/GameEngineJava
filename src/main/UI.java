@@ -4,7 +4,7 @@ import entity.Entity;
 import object.OBJ_Dinar;
 import object.OBJ_Heart;
 import object.OBJ_HungerBar;
-
+import entity.Player;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -38,6 +38,17 @@ public class UI {
     public Entity npc;
     int charIndex = 0;
     String combinedText = "";
+
+
+    //chest ui
+    public Entity openedChest;
+    public int chestSlotCol = 0;
+    public int chestSlotRow = 0;
+    public boolean cursorOnChest = true;
+
+
+    public Entity cursorItem = null;  // item picked up by cursor (for mouse or keyboard move)
+
 
     public UI(GamePanel gp) {
 
@@ -394,6 +405,8 @@ public class UI {
 
 
         }
+
+
     }
     public void dropItem(Entity entity) {
 
@@ -469,6 +482,67 @@ public class UI {
             gp.changeArea();
         }
     }
+    public void drawChestScreen() {
+
+        // LEFT: CHEST
+        drawInventory(openedChest, cursorOnChest);
+
+        // RIGHT: PLAYER
+        drawInventory(gp.player, !cursorOnChest);
+
+        // HINT
+        int x = gp.tileSize * 6;
+        int y = gp.tileSize * 10;
+        int width = gp.tileSize * 8;
+        int height = gp.tileSize * 2;
+        drawSubWindow(x, y, width, height);
+        g2.drawString("[ENTER] Move Item   [E] Close", x + 24, y + 40);
+    }
+    public void transferItem() {
+
+        Entity from;
+        Entity to;
+        int index;
+
+        // Determine source and destination
+        if (cursorOnChest) {
+            from = openedChest;
+            to = gp.player;
+            index = getItemIndexOnSlot(chestSlotCol, chestSlotRow);
+        } else {
+            from = gp.player;
+            to = openedChest;
+            index = getItemIndexOnSlot(playerSlotCol, playerSlotRow);
+        }
+
+        // Slot empty
+        if (index >= from.inventory.size()) return;
+
+        Entity item = from.inventory.get(index);
+
+        boolean transferred = false;
+
+        // TO PLAYER → apply player inventory rules
+        if (to == gp.player) {
+
+            Player player = gp.player; // explicit type binding
+            transferred = player.canObtainItem(item);
+
+        }
+        // TO CHEST → simple container add
+        else {
+
+            to.inventory.add(item);
+            transferred = true;
+        }
+
+        // Remove from source only if transfer succeeded
+        if (transferred) {
+            from.inventory.remove(index);
+            gp.playSE(11); // optional pickup sound
+        }
+    }
+
     public void drawTradeScreen() {
         switch(subState)
         {
@@ -889,6 +963,7 @@ public class UI {
 
         }
     }
+
     public void drawTitleScreen() {
 
         // FILL BACKGROUND BLACK
@@ -1335,6 +1410,10 @@ public class UI {
             if(gp.gameState == gp.sleepState)
             {
                 drawSleepScreen();
+            }
+            if(gp.gameState == gp.chestState){
+
+                drawChestScreen();
             }
         }
     }

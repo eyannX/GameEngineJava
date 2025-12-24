@@ -4,6 +4,7 @@ import main.GamePanel;
 import object.*;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class NPC_Merchant extends Entity{
     public NPC_Merchant(GamePanel gp)
@@ -56,5 +57,17 @@ public class NPC_Merchant extends Entity{
         facePlayer();
         gp.gameState = gp.tradeState;
         gp.ui.npc = this;
+    }
+    @Override
+    public BufferedImage getCurrentImage() {
+
+
+
+        return getDirectionalImage(
+                up1, up2,
+                down1, down2,
+                left1, left2,
+                right1, right2
+        );
     }
 }

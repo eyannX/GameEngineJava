@@ -19,10 +19,10 @@ public class Entity {
     public BufferedImage left1,left2,left3,left4,left5,left6,left7,left8;
     public BufferedImage right1,right2,right3,right4,right5,right6,right7, right8;
 
-    public BufferedImage up_idle1, up_idle2, up_idle3, up_idle4;
-    public BufferedImage down_idle1, down_idle2, down_idle3, down_idle4;
-    public BufferedImage left_idle1, left_idle2, left_idle3, left_idle4;
-    public BufferedImage right_idle1, right_idle2, right_idle3, right_idle4;
+    public BufferedImage up_idle1, up_idle2;
+    public BufferedImage down_idle1, down_idle2;
+    public BufferedImage left_idle1, left_idle2;
+    public BufferedImage right_idle1, right_idle2;
 
     public BufferedImage eat_left_1, eat_left_2, eat_left_3, eat_left_4, eat_left_5, eat_left_6, eat_left_7, eat_left_8;
     public BufferedImage eat_right_1, eat_right_2, eat_right_3, eat_right_4, eat_right_5, eat_right_6, eat_right_7, eat_right_8;
@@ -74,8 +74,19 @@ public class Entity {
     public boolean hostile = false;
     public boolean screaming = false;
     public boolean flying = false;
+    public int animationSpeed;
+    int attackCooldown = 0;
+    int attackCooldownMax = 60;
+    protected String fleeDirection = null;
+    protected int fleeDirectionLock = 0;
+
+
+
+
+
 
     //COUNTER
+
     public int spriteCounter = 0;
     public int actionLockCounter = 0;
     public int invincibleCounter = 0;
@@ -126,7 +137,7 @@ public class Entity {
 
     //ITEM ATTRIBUTES
     public ArrayList<Entity> inventory = new ArrayList<>();
-    public final int maxInventorySize = 20;
+    public int maxInventorySize = 20;
     public int attackValue;
     public int defenseValue;
     public String description = "";
@@ -153,8 +164,7 @@ public class Entity {
     public final int type_light = 9;
     public final int type_pickaxe = 10;
     public final int type_edible = 11;
-    public final int type_nonHostile = 12;
-    public final int type_neutral = 13;
+
 
 
 
@@ -200,7 +210,6 @@ public class Entity {
     public int getCenterX() {
         return (int) (worldX + solidArea.x + solidArea.width / 2);
     }
-
     public int getCenterY() {
         return (int) (worldY + solidArea.y + solidArea.height / 2);
     }
@@ -311,12 +320,12 @@ public class Entity {
     }
     public int getParticleSpeed() {
         int speed = 0;
-        //Sub-class specifications
+        //Subclass specifications
         return speed;
     }
     public int getParticleMaxLife() {
         int maxLife = 0;
-        //Sub-class specifications
+        //Subclass specifications
         return maxLife;
     }
     public BufferedImage getCurrentImage() {
@@ -367,6 +376,8 @@ public class Entity {
         gp.cChecker.checkEntity(this,gp.iTile);
         gp.cChecker.checkTallObject(this, gp.tallObj[gp.currentMap]);;
         boolean contactPlayer = gp.cChecker.checkPlayer(this);
+
+        //debug
         if(this.type == type_monster && hostile && contactPlayer) {
             damagePlayer(attack);
             System.out.println(name + " hostile=" + hostile + " attack=" + attack);
@@ -374,134 +385,149 @@ public class Entity {
     }
     public void update() {
 
+        if (sleep) return;
 
-        if(!sleep)
-        {
-            if(knockBack)
-            {
-                checkCollision();
-                if(collisionOn)
-                {
-                    knockBackCounter = 0;
-                    knockBack = false;
-                    speed = defaultSpeed;
-                }
-                else if(!collisionOn)
-                {
-                    switch (knockBackDirection)
-                    {
-                        case "up" :
-                            worldY -= speed;
-                            break;
 
-                        case "down" :
-                            worldY += speed;
-                            break;
+       //KNOCKBACK
+        if (knockBack) {
+            checkCollision();
 
-                        case "left" :
-                            worldX -= speed;
-                            break;
-
-                        case "right" :
-                            worldX += speed;
-                            break;
-                    }
-                }
-                knockBackCounter++;
-                if(knockBackCounter == 10) {
-                    knockBackCounter = 0;
-                    knockBack = false;
-                    speed = defaultSpeed;
+            if (collisionOn) {
+                knockBackCounter = 0;
+                knockBack = false;
+                speed = defaultSpeed;
+            } else {
+                switch (knockBackDirection) {
+                    case "up"    -> worldY -= speed;
+                    case "down"  -> worldY += speed;
+                    case "left"  -> worldX -= speed;
+                    case "right" -> worldX += speed;
                 }
             }
-            else if(attacking) {
-                attacking();
+
+            knockBackCounter++;
+            if (knockBackCounter >= 10) {
+                knockBackCounter = 0;
+                knockBack = false;
+                speed = defaultSpeed;
             }
-            else
-            {
-                setAction();
-                checkCollision();
+        }
+    /* =========================
+       2. ATTACK LOGIC IS HANDLED IN setAction() AND SPRITE ANIMATION
+       SO NO CALL TO attacking() METHOD
+       ========================= */
+        else {
+            setAction();
+            checkCollision();
 
-                if(!collisionOn) {
-                    switch (direction) {
-                        case "up" :
-                            worldY -= speed;
-                            break;
-
-                        case "down" :
-                            worldY += speed;
-                            break;
-
-                        case "left" :
-                            worldX -= speed;
-                            break;
-
-                        case "right" :
-                            worldX += speed;
-                            break;
-                    }
+            if (!collisionOn) {
+                switch (direction) {
+                    case "up"    -> worldY -= speed;
+                    case "down"  -> worldY += speed;
+                    case "left"  -> worldX -= speed;
+                    case "right" -> worldX += speed;
                 }
-                spriteCounter++;
+            }
+        }
 
-                // Set animation speed depending on current state
-                int animationSpeed;
+
+       //SPRITE ANIMATION (ALWAYS)
+        spriteCounter++;
+        if (spriteCounter >= getAnimationSpeed()) {
+            spriteCounter = 0;
+            spriteNum++;
+
+            int maxFrame = getMaxFrame();
+
+            if (spriteNum > maxFrame) {
+
                 if (attacking) {
-                    animationSpeed = 30;    // slower attack animation
-                } else if (screaming) {
-                    animationSpeed = 5;    // medium speed scream animation
-                } else if (flying) {
-                    animationSpeed = 10;    // faster flying animation
-                } else {
-                    animationSpeed = 8;    // walking or default animation speed
+                    attacking = false;
+                    attackCooldown = attackCooldownMax; // IMPORTANT: reset cooldown here
                 }
 
-                if (spriteCounter > animationSpeed) {
-                    spriteNum++;
+                spriteNum = 1;
 
-                    int maxFrame = attacking ? 4 : screaming ? 7 : flying ? 8 : 8;
-
-                    if (spriteNum > maxFrame) {
-                        spriteNum = 1;
-
-                        if (screaming) {
-                            screaming = false;
-                            speed = defaultSpeed;
-                        }
-
-                        if (attacking) {
-                            attacking = false;
-                        }
-                    }
-
-                    spriteCounter = 0;
+                if (screaming) {
+                    screaming = false;
+                    speed = defaultSpeed;
                 }
             }
-            //Like player's invincible method
-            if(invincible)
-            {
-                invincibleCounter++;
-                if(invincibleCounter > 20)
-                {
-                    invincible = false;
-                    invincibleCounter = 0;
-                }
-            }
-            if(shotAvailableCounter < 30)
-            {
-                shotAvailableCounter++;
-            }
-            if(offBalance)
-            {
-                offBalanceCounter++;
-                if(offBalanceCounter > 60)
-                {
-                    offBalance = false;
-                    offBalanceCounter = 0;
-                }
-            }
+        }
 
+    /* =========================
+       4. TIMERS
+       ========================= */
+        if (invincible) {
+            invincibleCounter++;
+            if (invincibleCounter > 20) {
+                invincible = false;
+                invincibleCounter = 0;
+            }
+        }
+
+        if (attackCooldown > 0) {
+            attackCooldown--;
+        }
+
+        if (offBalance) {
+            offBalanceCounter++;
+            if (offBalanceCounter > 60) {
+                offBalance = false;
+                offBalanceCounter = 0;
+            }
         }
     }
+
+
+    protected int getMaxFrame() {
+
+        return 2;
+    }
+    protected int getAnimationSpeed() {
+
+        //default animation speed
+        return 22;
+    }
+    /**
+     * Steers entity away from player while handling collisions.
+     * If the primary escape direction is blocked, tries lateral directions.
+     *
+     * @param tileRange detection radius in tiles
+     * @return true if flee logic was applied
+     */
+    protected boolean avoidPlayerIfInRange(int tileRange) {
+
+        int maxDistance = tileRange * gp.tileSize;
+
+        int dx = (int) (worldX - gp.player.worldX);
+        int dy = (int) (worldY - gp.player.worldY);
+
+        if (Math.abs(dx) > maxDistance && Math.abs(dy) > maxDistance) {
+            fleeDirection = null;
+            fleeDirectionLock = 0;
+            return false;
+        }
+
+        // If we are locked into a flee direction, keep using it
+        if (fleeDirectionLock > 0) {
+            direction = fleeDirection;
+            fleeDirectionLock--;
+            return true;
+        }
+
+        // Pick primary flee direction (away from player)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            fleeDirection = (dx > 0) ? "right" : "left";
+        } else {
+            fleeDirection = (dy > 0) ? "down" : "up";
+        }
+
+        direction = fleeDirection;
+        fleeDirectionLock = 20; // ~0.33s at 60 FPS
+        return true;
+    }
+
     public void checkAttackOrNot(int rate, int straight, int horizontal) {
 
         boolean tartgetInRange = false;
@@ -550,9 +576,43 @@ public class Entity {
         }
 
     }
-    public boolean isHorizontalOnlyAttacker() {
-        return false;
+    public void checkAttackLeftRight(int attackChance, int maxHorizontalDistance, int maxVerticalDistance) {
+
+
+        if (attacking) return;
+
+        boolean targetInRange = false;
+
+        int xDis = getXDistance(gp.player); // horizontal distance between entity and player
+        int yDis = getDistance(gp.player);  // overall distance (can be diagonal)
+
+        switch (direction) {
+            case "left":
+                // Player must be to the left, close horizontally and vertically within limits
+                if (gp.player.getCenterX() < getCenterX() && xDis <= maxHorizontalDistance && yDis <= maxVerticalDistance) {
+                    targetInRange = true;
+                }
+                break;
+            case "right":
+                // Player must be to the right, close horizontally and vertically within limits
+                if (gp.player.getCenterX() > getCenterX() && xDis <= maxHorizontalDistance && yDis <= maxVerticalDistance) {
+                    targetInRange = true;
+                }
+                break;
+        }
+
+        if (targetInRange) {
+            // Random chance to attack based on rate
+            int i = new Random().nextInt(attackChance);
+            if (i == 0) {
+                attacking = true;
+                spriteNum = 1;
+                spriteCounter = 0;
+                shotAvailableCounter = 0; // if used
+            }
+        }
     }
+
 
 
 

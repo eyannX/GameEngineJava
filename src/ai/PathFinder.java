@@ -76,7 +76,7 @@ public class PathFinder {
         int col = 0;
         int row = 0;
 
-        // 1. Mark tiles solid based on tile collision and interactive tiles
+        //Marking tiles solid based on tile collision and interactive tiles
         while(col < gp.maxWorldCol && row < gp.maxWorldRow) {
             int tileNum = gp.tileM.mapTileNum[gp.currentMap][col][row];
             if(gp.tileM.tile[tileNum].collision) {
@@ -102,7 +102,7 @@ public class PathFinder {
             }
         }
 
-        // 2. Now mark tall objects' tiles as solid separately
+
         // CHECK TALL OBJECTS
         for (TallInteractiveObject tallObj : gp.tallObj[gp.currentMap]) {
             if (tallObj != null) {

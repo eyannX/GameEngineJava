@@ -5,9 +5,9 @@ import main.GamePanel;
 
 import java.awt.*;
 
-public class IT_BigTree extends TallInteractiveObject {
+public class TIT_BigTree extends TallInteractiveObject {
 
-    public IT_BigTree(GamePanel gp, int col, int row) {
+    public TIT_BigTree(GamePanel gp, int col, int row) {
         super(gp, col, row);
 
         down1 = setup(
@@ -20,16 +20,16 @@ public class IT_BigTree extends TallInteractiveObject {
         spriteHeight = gp.tileSize * 4;
 
         hasCanopy = true;
-        canopyHeight = gp.tileSize * 2;
+        canopyHeight = gp.tileSize * 3;
 
         // Align sprite base to grid
         alignSpriteToBase();
 
         // Trunk collision
         solidArea.x = 50;
-        solidArea.y = gp.tileSize * 2;
+        solidArea.y = (gp.tileSize * 3) - 10;
         solidArea.width = 30;
-        solidArea.height = gp.tileSize * 2;
+        solidArea.height = gp.tileSize ;
 
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
