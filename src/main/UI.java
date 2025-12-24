@@ -269,25 +269,29 @@ public class UI {
         int frameHeight = 0;
         int slotCol = 0;
         int slotRow = 0;
-        if(entity == gp.player)
-        {
-            //FRAME
+
+        if (entity == gp.player) {
             frameX = gp.tileSize * 12;
             frameY = gp.tileSize;
             frameWidth = gp.tileSize * 6;
             frameHeight = gp.tileSize * 5;
             slotCol = playerSlotCol;
             slotRow = playerSlotRow;
-        }
-        else
-        {
-            //FRAME
+        } else if (entity == openedChest) {
             frameX = gp.tileSize * 2;
             frameY = gp.tileSize;
             frameWidth = gp.tileSize * 6;
             frameHeight = gp.tileSize * 5;
-            slotCol = npcSlotCol;
-            slotRow = npcSlotRow;
+            slotCol = chestSlotCol;
+            slotRow = chestSlotRow;
+        } else {
+            // Default fallback if needed
+            frameX = 0;
+            frameY = 0;
+            frameWidth = gp.tileSize * 6;
+            frameHeight = gp.tileSize * 5;
+            slotCol = 0;
+            slotRow = 0;
         }
 
         BufferedImage inventory;
@@ -306,8 +310,8 @@ public class UI {
 
 
         //SLOT
-        final int slotXstart = frameX + 20;
-        final int slotYstart = frameY + 20;
+        int slotXstart = frameX + 20;
+        int slotYstart = frameY + 20;
         int slotX = slotXstart;
         int slotY = slotYstart;
         int slotSize = gp.tileSize + 6;
@@ -334,7 +338,7 @@ public class UI {
             g2.drawImage(entity.inventory.get(i).down1, slotX,slotY + gp.tileSize + 32, gp.tileSize, gp.tileSize, null);  //draw item
 
             //DISPLAY AMOUNT
-            if(entity == gp.player && entity.inventory.get(i).amount > 1) {
+            if((entity == gp.player || entity == openedChest) && entity.inventory.get(i).amount > 1) {
 
                 //merchant npc's inventory cannot stack items
                 g2.setFont(g2.getFont().deriveFont(32f));
@@ -367,6 +371,10 @@ public class UI {
 
         //CURSOR
         if(cursor) {
+
+             slotXstart = frameX + 20;
+             slotYstart = frameY + 20;
+             slotSize = gp.tileSize + 6;
 
             int cursorX = slotXstart + (slotSize * slotCol);
             int cursorY = slotYstart + (slotSize * slotRow) + gp.tileSize + 32;
@@ -504,7 +512,6 @@ public class UI {
         Entity to;
         int index;
 
-        // Determine source and destination
         if (cursorOnChest) {
             from = openedChest;
             to = gp.player;
@@ -515,33 +522,86 @@ public class UI {
             index = getItemIndexOnSlot(playerSlotCol, playerSlotRow);
         }
 
-        // Slot empty
         if (index >= from.inventory.size()) return;
 
         Entity item = from.inventory.get(index);
-
         boolean transferred = false;
 
-        // TO PLAYER → apply player inventory rules
+        // Determine how many items to transfer
+        int amountToTransfer = gp.keyH.shiftPressed ? item.amount : 1;
+
+        // Prevent putting equipped items into chest
+        if (to != gp.player && (item == gp.player.currentWeapon || item == gp.player.currentShield)) {
+            addMessage("You cannot store equipped items!");
+            return;
+        }
+
+        // Prepare a new Entity to transfer with the amount
+        Entity transferItem = item.copy(); // Make a copy so we can set a custom amount
+        transferItem.amount = amountToTransfer;
+
+        int transferAmount = gp.keyH.shiftPressed ? item.amount : 1;
+
         if (to == gp.player) {
+            // Try to add to player inventory (player.canObtainItem should handle stacking and capacity)
+            transferred = gp.player.canObtainItem(item, transferAmount);
 
-            Player player = gp.player; // explicit type binding
-            transferred = player.canObtainItem(item);
+            if (transferred) {
+                // Reduce amount from chest
+                item.amount -= amountToTransfer;
 
-        }
-        // TO CHEST → simple container add
-        else {
+                // Remove item from chest if amount is 0 or less
+                if (item.amount <= 0) {
+                    from.inventory.remove(index);
+                }
 
-            to.inventory.add(item);
-            transferred = true;
-        }
+                gp.playSE(11);
+            }
+        } else {
+            // Transfer to chest inventory
 
-        // Remove from source only if transfer succeeded
-        if (transferred) {
-            from.inventory.remove(index);
-            gp.playSE(11); // optional pickup sound
+            if (transferItem.stackable) {
+                int chestIndex = to.searchItemInInventory(transferItem.name);
+                if (chestIndex != 999) {
+                    // Increase existing stack
+                    to.inventory.get(chestIndex).amount += amountToTransfer;
+                    transferred = true;
+                } else {
+                    // Add new stack if space available
+                    if (to.inventory.size() < to.maxInventorySize) {
+                        to.inventory.add(transferItem);
+                        transferred = true;
+                    } else {
+                        addMessage("Chest inventory is full!");
+                        transferred = false;
+                    }
+                }
+            } else {
+                // Non-stackable items just add if space
+                if (to.inventory.size() < to.maxInventorySize) {
+                    to.inventory.add(transferItem);
+                    transferred = true;
+                } else {
+                    addMessage("Chest inventory is full!");
+                    transferred = false;
+                }
+            }
+
+            if (transferred) {
+                // Reduce amount from player inventory
+                item.amount -= amountToTransfer;
+
+                // Remove if no more left
+                if (item.amount <= 0) {
+                    from.inventory.remove(index);
+                }
+
+                gp.playSE(11);
+            }
         }
     }
+
+
 
     public void drawTradeScreen() {
         switch(subState)

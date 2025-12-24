@@ -837,56 +837,6 @@ public class Player extends Entity{
 
         }
     }
-    public int searchItemInInventory(String itemName) {
-        int itemIndex = 999;
-        for(int i = 0; i < inventory.size(); i++)
-        {
-            if(inventory.get(i).name.equals(itemName))
-            {
-                itemIndex = i;
-                break;
-            }
-        }
-        return itemIndex;
-    }
-
-    public boolean canObtainItem(Entity item) {
-        boolean canObtain = false;
-
-        Entity newItem = gp.eGenerator.getObject(item.name);
-
-        //CHECK IF STACKABLE
-        if(newItem.stackable)
-        {
-            int index = searchItemInInventory(newItem.name);
-
-            if(index != 999)
-            {
-                inventory.get(index).amount++;
-                canObtain = true;
-            }
-            else
-            {
-                //New item, so need to check vacancy
-                if(inventory.size() != maxInventorySize)
-                {
-                    inventory.add(newItem);
-                    canObtain = true;
-                }
-            }
-        }
-        //NOT STACKABLE so check vacancy
-        else
-        {
-            if(inventory.size() != maxInventorySize)
-            {
-                inventory.add(newItem);
-                canObtain = true;
-            }
-        }
-        return  canObtain;
-    }
-
 
     public void draw(Graphics2D g2) {
 

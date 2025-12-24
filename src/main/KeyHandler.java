@@ -6,7 +6,7 @@ import java.awt.event.KeyListener;
 public class KeyHandler implements KeyListener {
 
     GamePanel gp;
-    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed, escPressed;
+    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed, escPressed, shiftPressed ;
 
     //DEBUG
     public boolean showDebugText = false;
@@ -72,7 +72,7 @@ public class KeyHandler implements KeyListener {
         }
         else if (gp.gameState == gp.chestState) {
             chestState(code);
-            System.out.println("Cursor on chest? " + gp.ui.cursorOnChest + " chestSlot: " + gp.ui.chestSlotRow + "," + gp.ui.chestSlotCol + " playerSlot: " + gp.ui.playerSlotRow + "," + gp.ui.playerSlotCol);
+            //System.out.println("Cursor on chest? " + gp.ui.cursorOnChest + " chestSlot: " + gp.ui.chestSlotRow + "," + gp.ui.chestSlotCol + " playerSlot: " + gp.ui.playerSlotRow + "," + gp.ui.playerSlotCol);
 
         }
 
@@ -484,7 +484,9 @@ public class KeyHandler implements KeyListener {
         if (code == KeyEvent.VK_ENTER) {
             gp.ui.transferItem();
         }
-
+        if(code == KeyEvent.VK_SHIFT){
+            shiftPressed= true;
+        }
         // CLOSE
         if (code == KeyEvent.VK_E) {
             ((object.OBJ_StorageChest) gp.ui.openedChest).closeChest();
@@ -600,6 +602,9 @@ public class KeyHandler implements KeyListener {
         }
         if(code == KeyEvent.VK_Q){
             dropKeyPressed = false;
+        }
+        if(code == KeyEvent.VK_SHIFT){
+            shiftPressed = false;
         }
     }
 }

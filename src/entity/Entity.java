@@ -713,6 +713,19 @@ public class Entity {
 
         return oppositeDirection;
     }
+    public int searchItemInInventory(String itemName) {
+        int itemIndex = 999;
+        for(int i = 0; i < inventory.size(); i++)
+        {
+            if(inventory.get(i).name.equals(itemName))
+            {
+                itemIndex = i;
+                break;
+            }
+        }
+        return itemIndex;
+    }
+
     public void attacking() {
 
         spriteCounter++;
@@ -919,6 +932,93 @@ public class Entity {
 
         // RESET ALPHA
         changeAlpha(g2, 1f);
+    }
+    public boolean canObtainItem(Entity item) {
+        boolean canObtain = false;
+
+        // Check if item is equipped (only if Player)
+        if (this == gp.player) {
+            if (item == gp.player.currentWeapon || item == gp.player.currentShield) {
+                // Can't put equipped items into chest or inventory again
+                return false;
+            }
+        }
+
+        Entity newItem = gp.eGenerator.getObject(item.name);
+
+        //CHECK IF STACKABLE
+        if(newItem.stackable)
+        {
+            int index = searchItemInInventory(newItem.name);
+
+            if(index != 999)
+            {
+                inventory.get(index).amount++;
+                canObtain = true;
+            }
+            else
+            {
+                //New item, so need to check vacancy
+                if(inventory.size() != maxInventorySize)
+                {
+                    inventory.add(newItem);
+                    canObtain = true;
+                }
+            }
+        }
+        //NOT STACKABLE so check vacancy
+        else
+        {
+            if(inventory.size() != maxInventorySize)
+            {
+                inventory.add(newItem);
+                canObtain = true;
+            }
+        }
+        return  canObtain;
+    }
+    public Entity copy() {
+        Entity clone = new Entity(gp);  // or however you instantiate your Entity
+
+        // Copy all relevant fields
+        clone.name = this.name;
+        clone.down1 = this.down1;  // assuming these are images or resources shared among all copies
+        clone.stackable = this.stackable;
+        clone.amount = this.amount;
+        clone.maxInventorySize = this.maxInventorySize;
+        // copy other necessary fields here, like description, type, stats etc.
+
+        return clone;
+    }
+
+    public boolean canObtainItem(Entity item, int amountToAdd) {
+        boolean canObtain = false;
+
+        Entity newItem = gp.eGenerator.getObject(item.name);
+
+        if(newItem.stackable) {
+            int index = searchItemInInventory(newItem.name);
+
+            if(index != 999) {
+                // Increase existing stack by the full amountToAdd
+                inventory.get(index).amount += amountToAdd;
+                canObtain = true;
+            } else {
+                // New item - check space
+                if(inventory.size() < maxInventorySize) {
+                    newItem.amount = amountToAdd; // set amount correctly
+                    inventory.add(newItem);
+                    canObtain = true;
+                }
+            }
+        } else {
+            // Non-stackable, just check space for 1 item (amount ignored)
+            if(inventory.size() < maxInventorySize) {
+                inventory.add(newItem);
+                canObtain = true;
+            }
+        }
+        return canObtain;
     }
 
     // Every 5 frames switch alpha between 0 and 1

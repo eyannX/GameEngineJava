@@ -167,22 +167,25 @@ public class GamePanel extends JPanel implements Runnable{
 
     @Override
     public void run() {
-        double drawInterval = (double) 1000000000 /FPS;
+        double drawInterval = (double) 1000000000 / FPS;
         double delta = 0;
         long lastTime = System.nanoTime();
         long currentTime;
 
-
-
-        while(gameThread != null)
-        {
+        while (gameThread != null) {
             currentTime = System.nanoTime();
 
-            delta += (currentTime - lastTime) / drawInterval;
-            //timer += currentTime - lastTime;
+            long elapsed = currentTime - lastTime;
             lastTime = currentTime;
-            if(delta >= 1)
-            {
+
+            // Clamp elapsed time to prevent huge delta spikes
+            if (elapsed > drawInterval * 5) {
+                elapsed = (long) (drawInterval * 5);  // Max 5 frames worth of time per update
+            }
+
+            delta += (double) elapsed / drawInterval;
+
+            if (delta >= 1) {
                 update();
                 /*repaint(); COMMENTED FOR FULL SCREEN*/
                 drawToTempScreen(); //FOR FULL SCREEN - Draw everything to the buffered image
@@ -190,9 +193,9 @@ public class GamePanel extends JPanel implements Runnable{
                 delta--;
                 //drawCount++;
             }
-
         }
     }
+
     public void update() {
 
         if(gameState == playState) {
@@ -275,17 +278,15 @@ public class GamePanel extends JPanel implements Runnable{
             return;
         }
 
-        // =========================
+
         // WORLD RENDER
-        // =========================
+
 
         // GROUND TILES
         tileM.draw(g2);
 
-        // =========================
-        // BUILD ENTITY LIST
-        // =========================
 
+        // BUILD ENTITY LIST
         entityList.add(player);
 
         // NPCs
