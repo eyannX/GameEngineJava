@@ -47,8 +47,6 @@ public class UI {
     public boolean cursorOnChest = true;
 
 
-    public Entity cursorItem = null;  // item picked up by cursor (for mouse or keyboard move)
-
 
     public UI(GamePanel gp) {
 
@@ -284,8 +282,15 @@ public class UI {
             frameHeight = gp.tileSize * 5;
             slotCol = chestSlotCol;
             slotRow = chestSlotRow;
-        } else {
-            // Default fallback if needed
+        } else if(entity == npc) {
+
+            frameX = gp.tileSize*2;
+            frameY = gp.tileSize;
+            frameWidth = gp.tileSize * 6;
+            frameHeight = gp.tileSize * 5;
+            slotCol = npcSlotCol;
+            slotRow = npcSlotRow;
+        } else{
             frameX = 0;
             frameY = 0;
             frameWidth = gp.tileSize * 6;
@@ -659,8 +664,10 @@ public class UI {
         }
     }
     public void trade_buy() {
+
+
         // DRAW PLAYER INVENTORY
-        drawInventory(gp.player, false); // i want to move cursor on merchant's inventory so cursor = false.
+        drawInventory(gp.player, false); // I want to move cursor on merchant's inventory so cursor = false.
         // DRAW PLAYER INVENTORY
         drawInventory(npc, true);
 

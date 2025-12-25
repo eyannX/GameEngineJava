@@ -2,6 +2,7 @@ package animals;
 
 import entity.Entity;
 import main.GamePanel;
+import main.Sound;
 import object.*;
 
 import java.awt.*;
@@ -13,13 +14,13 @@ public class Parrot extends Entity {
     GamePanel gp;
     Random random = new Random();
 
+    Sound sound;
 
     // AI timing
     int stateCounter = 0;
     int decisionInterval = 120; // 2 seconds at 60 FPS
 
-    //debug
-    public boolean debugDrawAttackArea = true;
+
 
 
     private boolean damageDealtThisAttack = false;
@@ -73,14 +74,14 @@ public class Parrot extends Entity {
 
     public void getImage() {
 
-        left1  = setup("/animals/parrot/walk_left1",  gp.tileSize, gp.tileSize);
-        left2  = setup("/animals/parrot/walk_left2",  gp.tileSize, gp.tileSize);
-        left3  = setup("/animals/parrot/walk_left3",  gp.tileSize, gp.tileSize);
-        left4  = setup("/animals/parrot/walk_left4",  gp.tileSize, gp.tileSize);
-        left5  = setup("/animals/parrot/walk_left5",  gp.tileSize, gp.tileSize);
-        left6  = setup("/animals/parrot/walk_left6",  gp.tileSize, gp.tileSize);
-        left7  = setup("/animals/parrot/walk_left7",  gp.tileSize, gp.tileSize);
-        left8  = setup("/animals/parrot/walk_left8",  gp.tileSize, gp.tileSize);
+        left1  = setup("/animals/parrot/walk_left8",  gp.tileSize, gp.tileSize);
+        left2  = setup("/animals/parrot/walk_left7",  gp.tileSize, gp.tileSize);
+        left3  = setup("/animals/parrot/walk_left6",  gp.tileSize, gp.tileSize);
+        left4  = setup("/animals/parrot/walk_left5",  gp.tileSize, gp.tileSize);
+        left5  = setup("/animals/parrot/walk_left4",  gp.tileSize, gp.tileSize);
+        left6  = setup("/animals/parrot/walk_left3",  gp.tileSize, gp.tileSize);
+        left7  = setup("/animals/parrot/walk_left2",  gp.tileSize, gp.tileSize);
+        left8  = setup("/animals/parrot/walk_left1",  gp.tileSize, gp.tileSize);
 
         right1 = setup("/animals/parrot/walk_right1", gp.tileSize, gp.tileSize);
         right2 = setup("/animals/parrot/walk_right2", gp.tileSize, gp.tileSize);
@@ -152,6 +153,7 @@ public class Parrot extends Entity {
 
 
         checkAttackHit();
+        updateSound();
     }
 
     @Override
@@ -357,6 +359,21 @@ public class Parrot extends Entity {
             damageDealtThisAttack = false;
         }
     }
+    public void updateSound() {
+
+        if (sound == null) return;
+
+        sound.setVolumeByDistance(
+                (int) gp.player.worldX,
+                (int) gp.player.worldY,
+                (int) this.worldX,
+                (int) this.worldY,
+                gp.tileSize * 5 // max hearing rangea
+        );
+
+
+    }
+
 
 
 
@@ -492,7 +509,7 @@ public class Parrot extends Entity {
     public void draw(Graphics2D g2) {
         super.draw(g2);  // Draw the parrot normally
 
-        if (debugDrawAttackArea && attacking && (spriteNum == 2 || spriteNum == 3)) {
+        if (gp.debug && attacking && (spriteNum == 2 || spriteNum == 3)) {
             // Calculate the position of the attackArea relative to the screen
 
             // Get screen coordinates of parrot

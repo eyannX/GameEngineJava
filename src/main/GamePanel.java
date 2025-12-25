@@ -51,8 +51,8 @@ public class GamePanel extends JPanel implements Runnable{
     public TileManager tileM = new TileManager(this);
     public KeyHandler keyH = new KeyHandler(this);
     public EventHandler eHandler = new EventHandler(this);
-    Sound music = new Sound(); // Created 2 different objects for Sound Effect and Music. If you use 1 object SE or Music stops sometimes.
-    Sound se = new Sound();
+    public Sound music = new Sound(); // Created 2 different objects for Sound Effect and Music. If you use 1 object SE or Music stops sometimes.
+    public Sound se = new Sound();
     public CollisionChecker cChecker = new CollisionChecker(this);
     public AssetSetter  aSetter = new AssetSetter(this);
     public UI ui = new UI(this);
@@ -477,10 +477,7 @@ public class GamePanel extends JPanel implements Runnable{
         se.setFile(i);
         se.play();
     }
-    public void stopSE(){
 
-        se.stop();
-    }
     public void changeArea() {
         if(nextArea != currentArea)
         {

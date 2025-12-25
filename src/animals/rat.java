@@ -76,7 +76,6 @@ public class rat extends Entity {
         right3 = setup("/animals/rat/rat_right_run3", scale, scale);
         right4 = setup("/animals/rat/rat_right_run4", scale, scale);
     }
-
     public void getIdleImage() {
 
         int scale = 32;

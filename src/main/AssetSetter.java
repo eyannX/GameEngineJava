@@ -125,7 +125,7 @@ public class AssetSetter {
 
         gp.npc[mapNum][i] = new NPC_Merchant(gp);
         gp.npc[mapNum][i].worldX = gp.tileSize*12;
-        gp.npc[mapNum][i].worldY = gp.tileSize*7;
+        gp.npc[mapNum][i].worldY = (gp.tileSize*7) - 25;
         i++;
 
         mapNum = 2;
@@ -180,17 +180,17 @@ public class AssetSetter {
         i++;
 
 
-        gp.monster[mapNum][i] = new MON_RedSlime(gp);
+        gp.monster[mapNum][i] = new blue_butterfly(gp);
         gp.monster[mapNum][i].worldX = gp.tileSize*34;
         gp.monster[mapNum][i].worldY = gp.tileSize*11;
         i++;
 
-        gp.monster[mapNum][i] = new MON_RedSlime(gp);
+        gp.monster[mapNum][i] = new blue_butterfly(gp);
         gp.monster[mapNum][i].worldX = gp.tileSize*38;
         gp.monster[mapNum][i].worldY = gp.tileSize*7;
         i++;
 
-        gp.monster[mapNum][i] = new MON_RedSlime(gp);
+        gp.monster[mapNum][i] = new blue_butterfly(gp);
         gp.monster[mapNum][i].worldX = gp.tileSize*37;
         gp.monster[mapNum][i].worldY = gp.tileSize*9;
         i++;

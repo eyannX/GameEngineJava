@@ -7,11 +7,15 @@ import javax.sound.sampled.FloatControl;
 import java.net.URL;
 
 public class Sound {
+
     Clip clip;
     URL[] soundURL = new URL[50];
     FloatControl fc;
     int volumeScale = 3;
     float volume;
+    boolean looping = false;
+    boolean active = false;
+
 
     public Sound() {
 
@@ -57,6 +61,9 @@ public class Sound {
         soundURL[39] = getClass().getResource("/sound/parrotHurt.wav");
 
 
+        /*sound = new Sound();
+        //ound.setFile(36); // chicken scream
+        //sound.loop();      // start looping once */
 
     }
 
@@ -75,16 +82,25 @@ public class Sound {
     }
 
     public void play() {
-            clip.start();
+        if (clip == null) return;
+        looping = false;
+        clip.start();
     }
-    public void loop() {
 
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
+    public void loop() {
+        if (clip == null) return;
+        looping = true;
+        clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
+
 
     public void stop() {
-            clip.stop();
+        if (clip == null) return;
+        clip.stop();
+        active = false;
     }
+
+
     public void checkVolume() {
 
         switch (volumeScale) {
@@ -97,4 +113,43 @@ public class Sound {
         }
         fc.setValue(volume);
     }
+    public void setVolumeByDistance(
+            int listenerX, int listenerY,
+            int sourceX, int sourceY,
+            int maxDistance
+    ) {
+        if (clip == null || fc == null) return;
+
+        int dx = listenerX - sourceX;
+        int dy = listenerY - sourceY;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        // OUT OF RANGE → stop sound completely
+        if (distance >= maxDistance) {
+            if (clip.isRunning()) {
+                clip.stop();
+                active = false;
+            }
+            return;
+        }
+
+        // IN RANGE → ensure playing
+        if (!clip.isRunning() && looping) {
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+            active = true;
+        }
+
+        // Logarithmic falloff (realistic)
+        double normalized = distance / maxDistance;
+
+        // Prevent log(0)
+        float volume = (float)(-20f * Math.log10(normalized + 0.01));
+
+        // Clamp volume
+        volume = Math.max(volume, -80f);
+        volume = Math.min(volume, 0f);
+
+        fc.setValue(volume);
+    }
+
 }

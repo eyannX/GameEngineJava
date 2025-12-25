@@ -18,24 +18,26 @@ public class NPC_Merchant extends Entity{
         setItems();
 
         solidArea = new Rectangle();
-        solidArea.x = 8;
-        solidArea.y = 16;
+        solidArea.x = 32;
+        solidArea.y = 50;
         solidArea.width = 32;
         solidArea.height = 32;
 
-        solidAreaDefaultX = 8;
-        solidAreaDefaultY = 16;
+        solidAreaDefaultX = solidArea.x;
+        solidAreaDefaultY = solidArea.y;
     }
     public void getImage()
     {
-        up1 = setup("/npc/merchant_down_1",gp.tileSize,gp.tileSize);
-        up2 = setup("/npc/merchant_down_2",gp.tileSize,gp.tileSize);
-        down1 = setup("/npc/merchant_down_1",gp.tileSize,gp.tileSize);
-        down2 = setup("/npc/merchant_down_2",gp.tileSize,gp.tileSize);
-        left1 = setup("/npc/merchant_down_1",gp.tileSize,gp.tileSize);
-        left2 = setup("/npc/merchant_down_2",gp.tileSize,gp.tileSize);
-        right1 = setup("/npc/merchant_down_1",gp.tileSize,gp.tileSize);
-        right2 = setup("/npc/merchant_down_2",gp.tileSize,gp.tileSize);
+        int height = 76;
+
+        up1 = setup("/npc/merchant_down_1",gp.tileSize,height);
+        up2 = setup("/npc/merchant_down_2",gp.tileSize,height);
+        down1 = setup("/npc/merchant_down_1",gp.tileSize,height);
+        down2 = setup("/npc/merchant_down_2",gp.tileSize,height);
+        left1 = setup("/npc/merchant_down_1",gp.tileSize,height);
+        left2 = setup("/npc/merchant_down_2",gp.tileSize,height);
+        right1 = setup("/npc/merchant_down_1",gp.tileSize,height);
+        right2 = setup("/npc/merchant_down_2",gp.tileSize,height);
     }
     public void setDialogue()
     {

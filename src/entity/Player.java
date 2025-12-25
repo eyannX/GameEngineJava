@@ -14,54 +14,38 @@ public class Player extends Entity{
     KeyHandler keyH;
     public final int screenX;
     public final int screenY;
-    int standCounter = 0;
     public boolean attackCanceled = false;
     public boolean lightUpdated = false;
-    int maxSpriteFrames = 8;
+    int maxSpriteFrames = 6;
     int idleSpriteNum = 1;        // 1 or 2
     int idleCounter = 0;
     final int idleDelay = 30;     // higher = slower (30–60 feels good)
     int standStillCounter = 0;
     final int IDLE_START_DELAY = 200; // frames before idle anim starts
-    int counter = 0;
-
-    BufferedImage[] up = loadSpriteSheet("/player/UpRun", 16, 16, 8, gp.tileSize);
-    BufferedImage[] down = loadSpriteSheet("/player/DownRun", 16, 16, 8, gp.tileSize);
-    BufferedImage[] left = loadSpriteSheet("/player/LeftRun", 16, 16, 8, gp.tileSize);
-    BufferedImage[] right = loadSpriteSheet("/player/RightRun", 16, 16, 8, gp.tileSize);
 
 
-    public enum Direction {
-        UP, DOWN, LEFT, RIGHT
-    }
+    int scale = 120;
 
-    public enum PlayerState {
-        IDLE,
-        RUN,
-        ATTACK,
-        GUARD
-    }
+    BufferedImage[] up = loadSpriteSheet("/player/player_run/run_up", 32, 32, 6, scale);
+    BufferedImage[] down = loadSpriteSheet("/player/player_run/run_down", 32, 32, 6, scale);
+    BufferedImage[] left = loadSpriteSheet("/player/player_run/run_left", 32, 32, 6, scale);
+    BufferedImage[] right = loadSpriteSheet("/player/player_run/run_right", 32, 32, 6, scale);
 
-    public enum WeaponType {
-        SWORD,
-        AXE,
-        PICKAXE
-    }
 
 
     public Player(GamePanel gp, KeyHandler keyH) {
 
-        super(gp); // calling constructor of super class(from entity class)
+        super(gp);
         this.keyH=keyH;
 
         screenX = gp.screenWidth/2 - (gp.tileSize/2);
         screenY = gp.screenHeight/2- (gp.tileSize/2);
 
         solidArea = new Rectangle();
-        solidArea.x = 22;
-        solidArea.y = 28;
-        solidArea.width = 18;
-        solidArea.height = 32;
+        solidArea.x = 50;
+        solidArea.y = 50;
+        solidArea.width = 26;
+        solidArea.height = 38;
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 
@@ -229,10 +213,7 @@ public class Player extends Entity{
         up5 = up[up_i];
         up_i++;
         up6 = up[up_i];
-        up_i++;
-        up7 = up[up_i];
-        up_i++;
-        up8 = up[up_i];
+
 
 
         int down_i = 0;
@@ -247,10 +228,7 @@ public class Player extends Entity{
         down5 = down[down_i];
         down_i ++;
         down6 = down[down_i];
-        down_i ++;
-        down7 = down[down_i];
-        down_i ++;
-        down8 = down[down_i];
+
 
         int left_i = 0;
         left1 = left[left_i];
@@ -264,10 +242,7 @@ public class Player extends Entity{
         left5 = left[left_i];
         left_i++;
         left6 = left[left_i];
-        left_i++;
-        left7 = left[left_i];
-        left_i++;
-        left8 = left[left_i];
+
 
         int right_i = 0;
         right1 = right[right_i];
@@ -281,25 +256,22 @@ public class Player extends Entity{
         right5 = right[right_i];
         right_i++;
         right6 = right[right_i];
-        right_i++;
-        right7 = right[right_i];
-        right_i++;
-        right8 = right[right_i];
+
 
     }
     public void getIdleImage(){
 
-        up_idle1 = setup("/player/up_idle1", gp.tileSize, gp.tileSize);
-        up_idle2 = setup("/player/up_idle2", gp.tileSize, gp.tileSize);
+        up_idle1 = setup("/player/player_idle/idle_up1", scale, scale);
+        up_idle2 = setup("/player/player_idle/idle_up2", scale, scale);
 
-        down_idle1 = setup("/player/down_idle1", gp.tileSize, gp.tileSize);
-        down_idle2 = setup("/player/down_idle2", gp.tileSize, gp.tileSize);
+        down_idle1 = setup("/player/player_idle/idle_down1", scale, scale);
+        down_idle2 = setup("/player/player_idle/idle_down2", scale, scale);
 
-        left_idle1 = setup("/player/left_idle1", gp.tileSize, gp.tileSize);
-        left_idle2 = setup("/player/left_idle2", gp.tileSize, gp.tileSize);
+        left_idle1 = setup("/player/player_idle/idle_left1", scale, scale);
+        left_idle2 = setup("/player/player_idle/idle_left2", scale, scale);
 
-        right_idle1 = setup("/player/right_idle1", gp.tileSize, gp.tileSize);
-        right_idle2 = setup("/player/right_idle2", gp.tileSize, gp.tileSize);
+        right_idle1 = setup("/player/player_idle/idle_right1", scale, scale);
+        right_idle2 = setup("/player/player_idle/idle_right2", scale, scale);
 
     }
     public void getSleepingImage(BufferedImage image) {
@@ -318,39 +290,45 @@ public class Player extends Entity{
         right_idle2 = image;
     }
     public void getAttackImage() {
-
         if(currentWeapon.type == type_sword)
         {
-            attackUp1 = setup("/player/boy_attack_up_1",gp.tileSize, gp.tileSize * 2);         // 16x32 px
-            attackUp2 = setup("/player/boy_attack_up_2",gp.tileSize, gp.tileSize * 2);         // 16x32 px
-            attackDown1 = setup("/player/boy_attack_down_1",gp.tileSize, gp.tileSize * 2);     // 16x32 px
-            attackDown2 = setup("/player/boy_attack_down_2",gp.tileSize, gp.tileSize * 2);     // 16x32 px
-            attackLeft1 = setup("/player/boy_attack_left_1",gp.tileSize * 2, gp.tileSize);      // 32x16 px
-            attackLeft2 = setup("/player/boy_attack_left_2",gp.tileSize * 2, gp.tileSize);      // 32x16 px
-            attackRight1 = setup("/player/boy_attack_right_1",gp.tileSize * 2, gp.tileSize);    // 32x16 px
-            attackRight2 = setup("/player/boy_attack_right_2",gp.tileSize * 2, gp.tileSize);    // 32x16 px
+            attackUp1 = setup("/player/player_attack/attack_up1",scale, scale);
+            attackUp2 = setup("/player/player_attack/attack_up2",scale, scale);
+            attackDown1 = setup("/player/player_attack/attack_down1",scale, scale);
+            attackDown2 = setup("/player/player_attack/attack_down2",scale, scale);
+            attackLeft1 = setup("/player/player_attack/attack_left1",scale, scale);
+            attackLeft2 = setup("/player/player_attack/attack_left2",scale, scale);
+            attackRight1 = setup("/player/player_attack/attack_right1",scale, scale);
+            attackRight2 = setup("/player/player_attack/attack_right2",scale, scale);
         }
         else if(currentWeapon.type == type_axe)
         {
-            attackUp1 = setup("/player/boy_axe_up_1",gp.tileSize, gp.tileSize * 2);         // 16x32 px
-            attackUp2 = setup("/player/boy_axe_up_2",gp.tileSize, gp.tileSize * 2);         // 16x32 px
-            attackDown1 = setup("/player/boy_axe_down_1",gp.tileSize, gp.tileSize * 2);     // 16x32 px
-            attackDown2 = setup("/player/boy_axe_down_2",gp.tileSize, gp.tileSize * 2);     // 16x32 px
-            attackLeft1 = setup("/player/boy_axe_left_1",gp.tileSize * 2, gp.tileSize);      // 32x16 px
-            attackLeft2 = setup("/player/boy_axe_left_2",gp.tileSize * 2, gp.tileSize);      // 32x16 px
-            attackRight1 = setup("/player/boy_axe_right_1",gp.tileSize * 2, gp.tileSize);    // 32x16 px
-            attackRight2 = setup("/player/boy_axe_right_2",gp.tileSize * 2, gp.tileSize);    // 32x16 px
+
+
+
+
+
+            attackUp1 = setup("/player/player_attack_axe/up1",scale, scale);
+            attackUp2 = setup("/player/player_attack_axe/up2",scale, scale);
+            attackDown1 = setup("/player/player_attack_axe/down1",scale, scale );
+            attackDown2 = setup("/player/player_attack_axe/down2",scale, scale );
+            attackLeft1 = setup("/player/player_attack_axe/left1",scale , scale);
+            attackLeft2 = setup("/player/player_attack_axe/left2",scale , scale);
+            attackRight1 = setup("/player/player_attack_axe/right1",scale , scale);
+            attackRight2 = setup("/player/player_attack_axe/right2",scale, scale);
         }
         else if(currentWeapon.type == type_pickaxe)
         {
-            attackUp1 = setup("/player/boy_pick_up_1",gp.tileSize, gp.tileSize * 2);         // 16x32 px
-            attackUp2 = setup("/player/boy_pick_up_2",gp.tileSize, gp.tileSize * 2);         // 16x32 px
-            attackDown1 = setup("/player/boy_pick_down_1",gp.tileSize, gp.tileSize * 2);     // 16x32 px
-            attackDown2 = setup("/player/boy_pick_down_2",gp.tileSize, gp.tileSize * 2);     // 16x32 px
-            attackLeft1 = setup("/player/boy_pick_left_1",gp.tileSize * 2, gp.tileSize);      // 32x16 px
-            attackLeft2 = setup("/player/boy_pick_left_2",gp.tileSize * 2, gp.tileSize);      // 32x16 px
-            attackRight1 = setup("/player/boy_pick_right_1",gp.tileSize * 2, gp.tileSize);    // 32x16 px
-            attackRight2 = setup("/player/boy_pick_right_2",gp.tileSize * 2, gp.tileSize);    // 32x16 px
+
+
+            attackUp1 = setup("/player/player_attack_pickaxe/up1",scale, scale);
+            attackUp2 = setup("/player/player_attack_pickaxe/up2",scale, scale);
+            attackDown1 = setup("/player/player_attack_pickaxe/down1",scale, scale);
+            attackDown2 = setup("/player/player_attack_pickaxe/down2",scale, scale);
+            attackLeft1 = setup("/player/player_attack_pickaxe/left1",scale, scale);
+            attackLeft2 = setup("/player/player_attack_pickaxe/left2",scale, scale);
+            attackRight1 = setup("/player/player_attack_pickaxe/right1",scale, scale);
+            attackRight2 = setup("/player/player_attack_pickaxe/right2",scale, scale);
         }
 
     }
@@ -486,7 +464,7 @@ public class Player extends Entity{
 
             // ANIMATION
             spriteCounter++;
-            if(spriteCounter > 4) {   // adjust this number for speed (lower = faster)
+            if(spriteCounter > 6) {   // adjust this number for speed (lower = faster)
                 spriteNum++;
                 if(spriteNum > maxSpriteFrames) {
                     spriteNum = 1;
@@ -853,11 +831,8 @@ public class Player extends Entity{
                     }
                 }
             }
-
-
         }
     }
-
     public void draw(Graphics2D g2) {
 
         BufferedImage image = null;
@@ -874,7 +849,7 @@ public class Player extends Entity{
         {
             case "up":
                 if(attacking) {
-                    tempScreenY = screenY - gp.tileSize;
+
                     image = (spriteNum == 1 ? attackUp1 : attackUp2);
                 }
                 else if(moving) {
@@ -903,7 +878,7 @@ public class Player extends Entity{
 
             case "left":
                 if(attacking) {
-                    tempScreenX = screenX - gp.tileSize;
+
                     image = (spriteNum == 1 ? attackLeft1 : attackLeft2);
                 }
                 else if(moving) {
