@@ -30,6 +30,25 @@ public class Player extends Entity{
     BufferedImage[] left = loadSpriteSheet("/player/LeftRun", 16, 16, 8, gp.tileSize);
     BufferedImage[] right = loadSpriteSheet("/player/RightRun", 16, 16, 8, gp.tileSize);
 
+
+    public enum Direction {
+        UP, DOWN, LEFT, RIGHT
+    }
+
+    public enum PlayerState {
+        IDLE,
+        RUN,
+        ATTACK,
+        GUARD
+    }
+
+    public enum WeaponType {
+        SWORD,
+        AXE,
+        PICKAXE
+    }
+
+
     public Player(GamePanel gp, KeyHandler keyH) {
 
         super(gp); // calling constructor of super class(from entity class)
@@ -98,6 +117,7 @@ public class Player extends Entity{
         getIdleImage();
         //setDialogue();
     }
+
     public void setDefaultPositions() {
 
         gp.currentMap = 0;
