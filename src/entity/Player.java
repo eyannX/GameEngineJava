@@ -42,10 +42,10 @@ public class Player extends Entity{
         screenY = gp.screenHeight/2- (gp.tileSize/2);
 
         solidArea = new Rectangle();
-        solidArea.x = 50;
-        solidArea.y = 50;
-        solidArea.width = 26;
-        solidArea.height = 38;
+        solidArea.x = 22;
+        solidArea.y = 20;
+        solidArea.width = 22;
+        solidArea.height = 32;
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 
@@ -133,25 +133,24 @@ public class Player extends Entity{
         inventory.add(currentWeapon);
         inventory.add(currentShield);
 
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
 
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
 
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Boots(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
-        inventory.add(new OBJ_Croissant(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_Bow(gp));
+        inventory.add(new OBJ_Lantern(gp));
+        inventory.add(new OBJ_Pickaxe(gp));
+        inventory.add(new OBJ_Axe(gp));
 
 
 
@@ -330,20 +329,44 @@ public class Player extends Entity{
             attackRight1 = setup("/player/player_attack_pickaxe/right1",scale, scale);
             attackRight2 = setup("/player/player_attack_pickaxe/right2",scale, scale);
         }
+        else if(currentWeapon.type == type_bow)
+        {
+            attackUp1 = setup("/player/player_bow/bowUp1",scale, scale);
+            attackUp2 = setup("/player/player_bow/bowUp2",scale, scale);
+            attackUp3 = setup("/player/player_bow/bowUp3",scale, scale);
+            attackUp4 = setup("/player/player_bow/bowUp4",scale, scale);
+
+            attackDown1 = setup("/player/player_bow/bowDown1",scale, scale);
+            attackDown2 = setup("/player/player_bow/bowDown2",scale, scale);
+            attackDown3 = setup("/player/player_bow/bowDown3",scale, scale);
+            attackDown4 = setup("/player/player_bow/bowDown4",scale, scale);
+
+            attackLeft1 = setup("/player/player_bow/bowLeft1",scale, scale);
+            attackLeft2 = setup("/player/player_bow/bowLeft2",scale, scale);
+            attackLeft3 = setup("/player/player_bow/bowLeft3",scale, scale);
+            attackLeft4 = setup("/player/player_bow/bowLeft4",scale, scale);
+
+            attackRight1 = setup("/player/player_bow/bowRight1",scale, scale);
+            attackRight2 = setup("/player/player_bow/bowRight2",scale, scale);
+            attackRight3 = setup("/player/player_bow/bowRight3",scale, scale);
+            attackRight4 = setup("/player/player_bow/bowRight4",scale, scale);
+
+
+
+        }
 
     }
     public void getGuardImage() {
 
-        guardUp = setup("/player/boy_guard_up",gp.tileSize,gp.tileSize);
-        guardDown = setup("/player/boy_guard_down",gp.tileSize,gp.tileSize);
-        guardLeft = setup("/player/boy_guard_left",gp.tileSize,gp.tileSize);
-        guardRight = setup("/player/boy_guard_right",gp.tileSize,gp.tileSize);
+        guardUp = setup("/player/player_guard/up",scale,scale);
+        guardDown = setup("/player/player_guard/down",scale,scale);
+        guardLeft = setup("/player/player_guard/left",scale,scale);
+        guardRight = setup("/player/player_guard/right",scale,scale);
     }
     public void update() {
 
-        // =====================
+
         // KNOCKBACK LOGIC
-        // =====================
         if(knockBack) {
 
             collisionOn = false;
@@ -378,6 +401,38 @@ public class Player extends Entity{
             return; // important so knockback overrides movement
         }
 
+
+        // BOW CHARGING (RMB)
+        if(currentWeapon != null && currentWeapon.type == type_bow) {
+
+            // Start charging
+            if(gp.mouseH.rightPressed && !chargingBow) {
+                chargingBow = true;
+                bowCharge = 0;
+                spriteCounter = 0;
+            }
+
+            // Charging
+            if(gp.mouseH.rightPressed && chargingBow) {
+                bowCharge++;
+                if(bowCharge > MAX_BOW_CHARGE) {
+                    bowCharge = MAX_BOW_CHARGE;
+                }
+            }
+
+            // Release → shoot
+            if(!gp.mouseH.rightPressed && chargingBow) {
+
+                if(bowCharge >= MIN_BOW_CHARGE) {
+                    shootArrow();   // we define this below
+                }
+
+                chargingBow = false;
+                bowCharge = 0;
+            }
+        }
+
+
         // ATTACKING
         if(attacking) {
             attacking();
@@ -398,7 +453,7 @@ public class Player extends Entity{
                 keyH.upPressed || keyH.downPressed ||
                         keyH.leftPressed || keyH.rightPressed;
 
-        if(moving || keyH.enterPressed) {
+        if(moving || keyH.enterPressed || gp.mouseH.leftJustClicked) {
 
             movingCounter++;
             standStillCounter = 0;
@@ -451,20 +506,25 @@ public class Player extends Entity{
             }
 
             // ATTACK KEY
-            if(keyH.enterPressed && !attackCanceled) {
+            if((keyH.enterPressed || gp.mouseH.leftJustClicked)
+                    && !attackCanceled
+                    && currentWeapon.type != type_bow) {
+
                 gp.playSE(7);
                 attacking = true;
                 spriteCounter = 0;
             }
 
             attackCanceled = false;
+            gp.mouseH.leftJustClicked = false;
             keyH.enterPressed = false;
             guarding = false;
             guardCounter = 0;
 
+
             // ANIMATION
             spriteCounter++;
-            if(spriteCounter > 6) {   // adjust this number for speed (lower = faster)
+            if(spriteCounter > 5) {   // adjust this number for speed (lower = faster)
                 spriteNum++;
                 if(spriteNum > maxSpriteFrames) {
                     spriteNum = 1;
@@ -551,7 +611,7 @@ public class Player extends Entity{
         //player has more invincibility than monsters
         if(playerInvincible){
             playerInvincibleCounter++;
-            if(playerInvincibleCounter > 60) {
+            if(playerInvincibleCounter > 30) {
                 playerInvincible = false;
                 transparent = false;
                 playerInvincibleCounter = 0;
@@ -647,6 +707,38 @@ public class Player extends Entity{
             }
         }
     }
+    public void shootArrow() {
+
+        for(int i = 0; i < gp.projectile[gp.currentMap].length; i++) {
+
+            if(gp.projectile[gp.currentMap][i] == null ||
+                    !gp.projectile[gp.currentMap][i].alive) {
+
+                Projectile arrow = new OBJ_Fireball(gp); // or your arrow class
+
+                float ratio = (float) bowCharge / MAX_BOW_CHARGE;
+
+                arrow.speed = (int)(6 + ratio * 10);
+                arrow.maxLife = (int)(30 + ratio * 60);
+                arrow.attack = (int)(1 + ratio * 4);
+                arrow.knockBackPower = (int)(1 + ratio * 3);
+
+                arrow.set(
+                        (int) worldX,
+                        (int) worldY,
+                        direction,
+                        true,
+                        this
+                );
+
+                gp.projectile[gp.currentMap][i] = arrow;
+                gp.playSE(10);
+                break;
+            }
+        }
+    }
+
+
     public void interactNPC(int i) {
 
         if(i != 999)
@@ -780,7 +872,7 @@ public class Player extends Entity{
             Entity selectedItem = inventory.get(itemIndex);
 
             if(selectedItem.type == type_sword ||
-                    selectedItem.type == type_axe || selectedItem.type == type_pickaxe) {
+                    selectedItem.type == type_axe || selectedItem.type == type_pickaxe || selectedItem.type == type_bow) {
 
                 currentWeapon = selectedItem;
                 attack = getAttack();   //update player attack
@@ -790,6 +882,7 @@ public class Player extends Entity{
                 switch (selectedItem.type){
                     case type_sword : gp.playSE(33); break;
                     case type_axe : gp.playSE(34); break;
+                    case type_bow : gp.playSE(10); break;
                 }
             }
             if(selectedItem.type == type_shield)
@@ -835,6 +928,9 @@ public class Player extends Entity{
     }
     public void draw(Graphics2D g2) {
 
+
+
+
         BufferedImage image = null;
         int tempScreenX = screenX;
         int tempScreenY = screenY;
@@ -848,8 +944,25 @@ public class Player extends Entity{
         switch (direction)
         {
             case "up":
-                if(attacking) {
 
+                if(currentWeapon.type == type_bow && chargingBow) {
+
+                    int frame;
+                    float ratio = (float) bowCharge / MAX_BOW_CHARGE;
+
+                    if(ratio < 0.25f) frame = 1;
+                    else if(ratio < 0.5f) frame = 2;
+                    else if(ratio < 0.75f) frame = 3;
+                    else frame = 4;
+
+                    image = frame == 1 ? attackUp1 : frame == 2 ? attackUp2 : frame == 3 ? attackUp3 : attackUp4;
+                }
+
+                else if(attacking) {
+
+                    if(currentWeapon.type == type_pickaxe){
+
+                    }
                     image = (spriteNum == 1 ? attackUp1 : attackUp2);
                 }
                 else if(moving) {
@@ -863,7 +976,20 @@ public class Player extends Entity{
                 break;
 
             case "down":
-                if(attacking) {
+
+                if(currentWeapon.type == type_bow && chargingBow) {
+
+                    int frame;
+                    float ratio = (float) bowCharge / MAX_BOW_CHARGE;
+
+                    if(ratio < 0.25f) frame = 1;
+                    else if(ratio < 0.5f) frame = 2;
+                    else if(ratio < 0.75f) frame = 3;
+                    else frame = 4;
+
+                    image = frame == 1 ? attackDown1 : frame == 2 ? attackDown2 : frame == 3 ? attackDown3 : attackDown4;
+                }
+                else if(attacking) {
                     image = (spriteNum == 1 ? attackDown1 : attackDown2);
                 }
                 else if(moving) {
@@ -877,7 +1003,20 @@ public class Player extends Entity{
                 break;
 
             case "left":
-                if(attacking) {
+
+                if(currentWeapon.type == type_bow && chargingBow) {
+
+                    int frame;
+                    float ratio = (float) bowCharge / MAX_BOW_CHARGE;
+
+                    if(ratio < 0.25f) frame = 1;
+                    else if(ratio < 0.5f) frame = 2;
+                    else if(ratio < 0.75f) frame = 3;
+                    else frame = 4;
+
+                    image = frame == 1 ? attackLeft1 : frame == 2 ? attackLeft2 : frame == 3 ? attackLeft3 : attackLeft4;
+                }
+                else if(attacking) {
 
                     image = (spriteNum == 1 ? attackLeft1 : attackLeft2);
                 }
@@ -892,7 +1031,20 @@ public class Player extends Entity{
                 break;
 
             case "right":
-                if(attacking) {
+
+                if(currentWeapon.type == type_bow && chargingBow) {
+
+                    int frame;
+                    float ratio = (float) bowCharge / MAX_BOW_CHARGE;
+
+                    if(ratio < 0.25f) frame = 1;
+                    else if(ratio < 0.5f) frame = 2;
+                    else if(ratio < 0.75f) frame = 3;
+                    else frame = 4;
+
+                    image = frame == 1 ? attackRight1 : frame == 2 ? attackRight2 : frame == 3 ? attackRight3 : attackRight4;
+                }
+                else if(attacking) {
                     image = (spriteNum == 1 ? attackRight1 : attackRight2);
                 }
                 else if(moving) {
@@ -913,7 +1065,7 @@ public class Player extends Entity{
         }
 
         if(drawing) {
-            g2.drawImage(image, tempScreenX, tempScreenY, null);
+            g2.drawImage(image, tempScreenX - 28, tempScreenY - 28, null);
         }
 
         // RESET ALPHA
@@ -952,8 +1104,31 @@ public class Player extends Entity{
                     attackArea.width,
                     attackArea.height
             );
-        }
-        }
 
+
+        }
+    }
+
+    private BufferedImage getBowChargeImage(int frame) {
+        switch (direction) {
+            case "up":
+                return frame == 1 ? attackUp1 :
+                        frame == 2 ? attackUp2 :
+                                frame == 3 ? attackUp3 : attackUp4;
+            case "down":
+                return frame == 1 ? attackDown1 :
+                        frame == 2 ? attackDown2 :
+                                frame == 3 ? attackDown3 : attackDown4;
+            case "left":
+                return frame == 1 ? attackLeft1 :
+                        frame == 2 ? attackLeft2 :
+                                frame == 3 ? attackLeft3 : attackLeft4;
+            case "right":
+                return frame == 1 ? attackRight1 :
+                        frame == 2 ? attackRight2 :
+                                frame == 3 ? attackRight3 : attackRight4;
+        }
+        return attackDown1;
+    }
 
 }

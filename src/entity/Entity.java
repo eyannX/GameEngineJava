@@ -148,6 +148,13 @@ public class Entity {
     public boolean stackable = false;
     public int amount = 1;
     public int lightRadius;
+    // Bow charge
+    public boolean chargingBow = false;
+    public int bowCharge = 0;
+    public final int MAX_BOW_CHARGE = 60; //1 second at 60 FPS
+    public final int MIN_BOW_CHARGE = 10;
+    public final float BOW_CHARGE_SPEED_MULT = 0.25f;
+
 
 
     //TYPE
@@ -164,6 +171,7 @@ public class Entity {
     public final int type_light = 9;
     public final int type_pickaxe = 10;
     public final int type_edible = 11;
+    public final int type_bow = 12;
 
 
 

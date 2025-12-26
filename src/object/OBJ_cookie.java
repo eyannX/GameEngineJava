@@ -6,12 +6,12 @@ import main.GamePanel;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
-public class OBJ_Croissant extends Entity {
+public class OBJ_cookie extends Entity {
 
     GamePanel gp;
-    public static final String objName = "croissant";
+    public static final String objName = "Cookie";
 
-    public OBJ_Croissant(GamePanel gp) {
+    public OBJ_cookie(GamePanel gp) {
         super(gp);
 
         this.gp = gp;
@@ -19,9 +19,9 @@ public class OBJ_Croissant extends Entity {
         type = type_edible;
         name = objName;
         value = 5;
-        down1 = setup("/objects/croissant",32, 32);
+        down1 = setup("/objects/cookie",32, 32);
         description = "[" + name + "]\nrecovers your hunger by " + value + ".";
-        price = 50;
+        price = 1000;
         stackable = true;
 
         setDialogue();

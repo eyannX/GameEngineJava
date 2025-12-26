@@ -6,7 +6,7 @@ import java.awt.event.KeyListener;
 public class KeyHandler implements KeyListener {
 
     GamePanel gp;
-    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed, escPressed, shiftPressed ;
+    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed, ePressed, shiftPressed ;
 
     //DEBUG
     public boolean showDebugText = false;
@@ -78,77 +78,37 @@ public class KeyHandler implements KeyListener {
 
     }
 
-    public void titleState(int code)
-    {
-        //MAIN MENU
-        if (gp.ui.titleScreenState == 0) {
-            if (code == KeyEvent.VK_W) {
-                gp.ui.commandNum--;
-                if (gp.ui.commandNum < 0) {
-                    gp.ui.commandNum = 2;
-                }
-            }
-            if (code == KeyEvent.VK_S) {
-                gp.ui.commandNum++;
-                if (gp.ui.commandNum > 2) {
-                    gp.ui.commandNum = 0;
-                }
-            }
-            if (code == KeyEvent.VK_ENTER) {
-                if (gp.ui.commandNum == 0) {
-                    gp.ui.titleScreenState = 1; // Character class selection screen
-                    //gp.gameState = gp.playState;
-                }
-                if (gp.ui.commandNum == 1) {
-                    //LOAD GAME
-                    gp.saveLoad.load();
-                    gp.gameState = gp.playState;
-                    gp.playMusic(0);
+    public void titleState(int code) {
 
-                }
-                if (gp.ui.commandNum == 2) {
-                    System.exit(0);
-                }
+        //MAIN MENU
+        if(code == KeyEvent.VK_W) {
+            gp.ui.commandNum --;
+            gp.playSE(1);
+            if(gp.ui.commandNum < 0){
+                gp.ui.commandNum = 2;
             }
         }
-        //SECOND SCREEN // CHARACTER SELECTION
-        else if (gp.ui.titleScreenState == 1) {
-            if (code == KeyEvent.VK_W) {
-                gp.ui.commandNum--;
-                if (gp.ui.commandNum < 0) {
-                    gp.ui.commandNum = 3;
-                }
+        if(code == KeyEvent.VK_S){
+            gp.playSE(1);
+            gp.ui.commandNum ++;
+            if(gp.ui.commandNum > 2){
+                gp.ui.commandNum = 0;
             }
-            if (code == KeyEvent.VK_S) {
-                gp.ui.commandNum++;
-                if (gp.ui.commandNum > 3) {
-                    gp.ui.commandNum = 0;
-                }
-            }
-
-            if (code == KeyEvent.VK_ENTER) {
-                //FIGHTER
-                if (gp.ui.commandNum == 0) {
-                    System.out.println("Do some fighter specific stuff!");
+        }
+        if(code == KeyEvent.VK_ENTER){
+            switch (gp.ui.commandNum){
+                case 0:
+                    gp.gameState = gp.playState; //gp.playMusic
+                    gp.playMusic(0);
+                    break;
+                case 1:
+                    gp.saveLoad.save(); // to save progress
                     gp.gameState = gp.playState;
                     gp.playMusic(0);
-                }
-                //THIEF
-                if (gp.ui.commandNum == 1) {
-                    System.out.println("Do some thief specific stuff!");
-                    gp.gameState = gp.playState;
-                    gp.playMusic(0);
-                }
-                //SORCERER
-                if (gp.ui.commandNum == 2) {
-                    System.out.println("Do some sorcerer specific stuff!");
-                    gp.gameState = gp.playState;
-                    gp.playMusic(0);
-                }
-                //BACK
-                if (gp.ui.commandNum == 3) {
-                    gp.ui.titleScreenState = 0;
-                }
+                    break;
+                case 2:
+                    System.exit(0);
+                    break;
             }
         }
     }
@@ -183,6 +143,7 @@ public class KeyHandler implements KeyListener {
         {
             enterPressed = true;
         }
+
         if(code == KeyEvent.VK_F)
         {
             shotKeyPressed = true;
@@ -493,38 +454,63 @@ public class KeyHandler implements KeyListener {
         }
     }
     private void moveChestCursor(int rowDelta, int colDelta) {
+
+        // Snapshot previous state (for sound)
+        boolean prevCursorOnChest = gp.ui.cursorOnChest;
+        int prevChestRow = gp.ui.chestSlotRow;
+        int prevChestCol = gp.ui.chestSlotCol;
+        int prevPlayerRow = gp.ui.playerSlotRow;
+        int prevPlayerCol = gp.ui.playerSlotCol;
+
+        int maxCol = 4;
+
         if (gp.ui.cursorOnChest) {
-            gp.ui.chestSlotRow += rowDelta;
-            gp.ui.chestSlotCol += colDelta;
 
-            // Wrap to player inventory if moving left out of bounds
-            if (gp.ui.chestSlotCol < 0) {
+            int newCol = gp.ui.chestSlotCol + colDelta;
+
+            // If trying to move past horizontal edge → switch inventory
+            if (newCol < 0 || newCol > maxCol) {
                 gp.ui.cursorOnChest = false;
-                gp.ui.playerSlotCol = 4;  // last col of player inventory
-                // Optional: set playerSlotRow to current chestSlotRow or 0
+                gp.ui.playerSlotCol = (newCol < 0) ? maxCol : 0;
                 gp.ui.playerSlotRow = Math.min(gp.ui.chestSlotRow, 3);
+            } else {
+                gp.ui.chestSlotCol = newCol;
+                gp.ui.chestSlotRow += rowDelta;
             }
-        } else {
-            gp.ui.playerSlotRow += rowDelta;
-            gp.ui.playerSlotCol += colDelta;
 
-            // Wrap to chest inventory if moving right out of bounds
-            if (gp.ui.playerSlotCol > 4) {
+        } else {
+
+            int newCol = gp.ui.playerSlotCol + colDelta;
+
+            // If trying to move past horizontal edge → switch inventory
+            if (newCol < 0 || newCol > maxCol) {
                 gp.ui.cursorOnChest = true;
-                gp.ui.chestSlotCol = 0;
-                // Optional: set chestSlotRow to current playerSlotRow or 0
+                gp.ui.chestSlotCol = (newCol < 0) ? maxCol : 0;
                 gp.ui.chestSlotRow = Math.min(gp.ui.playerSlotRow, 3);
+            } else {
+                gp.ui.playerSlotCol = newCol;
+                gp.ui.playerSlotRow += rowDelta;
             }
         }
 
-        // Clamp row/col for chest and player inventories
+        // Clamp rows only (columns already handled)
         gp.ui.chestSlotRow = clamp(gp.ui.chestSlotRow, 0, 3);
-        gp.ui.chestSlotCol = clamp(gp.ui.chestSlotCol, 0, 4);
         gp.ui.playerSlotRow = clamp(gp.ui.playerSlotRow, 0, 3);
-        gp.ui.playerSlotCol = clamp(gp.ui.playerSlotCol, 0, 4);
 
-        gp.playSE(9);  // cursor sound
+        // Play sound only if movement actually occurred
+        boolean moved =
+                prevCursorOnChest != gp.ui.cursorOnChest ||
+                        prevChestRow != gp.ui.chestSlotRow ||
+                        prevChestCol != gp.ui.chestSlotCol ||
+                        prevPlayerRow != gp.ui.playerSlotRow ||
+                        prevPlayerCol != gp.ui.playerSlotCol;
+
+        if (moved) {
+            gp.playSE(9);
+        }
     }
+
+
 
 
 
@@ -605,6 +591,9 @@ public class KeyHandler implements KeyListener {
         }
         if(code == KeyEvent.VK_SHIFT){
             shiftPressed = false;
+        }
+        if(code == KeyEvent.VK_E){
+            ePressed = false;
         }
     }
 }

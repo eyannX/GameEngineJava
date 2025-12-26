@@ -12,6 +12,7 @@ import tile_interactive.TallInteractiveObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,15 +20,18 @@ import java.util.Comparator;
 
 
 public class GamePanel extends JPanel implements Runnable{
-    //SCREEN SETTINGS
-    final int originalTileSize = 16; // 16*16  tile. default
-    final int scale = 4; // 16*3 scale
 
-    public final int tileSize = originalTileSize * scale; // 64*64 tile
-    public final int maxScreenCol = 20; // 4:3 window
+    //SCREEN SETTINGS
+    final int originalTileSize = 16;
+    final int scale = 4;
+
+    public final int tileSize = originalTileSize * scale;
+    public final int maxScreenCol = 20;
     public final int maxScreenRow = 12;
-    public final int screenWidth = tileSize * maxScreenCol;  //48*20 = 960 pixels
-    public final int screenHeight = tileSize * maxScreenRow;  //48*12 = 576 pixels  // GAME SCREEN SIZE
+    public final int screenWidth = tileSize * maxScreenCol;
+    public final int screenHeight = tileSize * maxScreenRow;
+
+
 
     //WORLD SETTINGS
     public int maxWorldCol;
@@ -44,8 +48,12 @@ public class GamePanel extends JPanel implements Runnable{
     public boolean fullScreenOn = false;
 
 
-    //FPS
+    //game loop
     int FPS = 60;
+    double drawInterval = (double) 1000000000 / FPS;
+    public double delta = 0;
+    long lastTime = System.nanoTime();
+    long currentTime;
 
     //SYSTEM
     public TileManager tileM = new TileManager(this);
@@ -63,6 +71,7 @@ public class GamePanel extends JPanel implements Runnable{
     SaveLoad saveLoad = new SaveLoad(this);
     public EntityGenerator eGenerator = new EntityGenerator(this);
     public CutsceneManager csManager = new CutsceneManager(this);
+    public MouseHandler mouseH = new MouseHandler();
     Thread gameThread;
 
     //ENTITY AND OBJECT
@@ -105,11 +114,15 @@ public class GamePanel extends JPanel implements Runnable{
     public final int dungeon = 52;
 
 
+
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight)); // JPanel size
         this.setBackground(Color.black);
         this.setDoubleBuffered(true); // improve game's rendering performance
         this.addKeyListener(keyH);
+        this.addMouseListener(mouseH);
+        this.addMouseMotionListener(mouseH);
+        this.requestFocusInWindow();
         this.setFocusable(true);
     }
     public void setupGame() {
@@ -126,7 +139,6 @@ public class GamePanel extends JPanel implements Runnable{
 
         //FOR FULLSCREEN
         tempScreen = new BufferedImage(screenWidth,screenHeight,BufferedImage.TYPE_INT_ARGB); //blank screen
-        g2 = (Graphics2D) tempScreen.getGraphics(); // g2 attached to this tempScreen. g2 will draw on this tempScreen buffered image.
         if(fullScreenOn) {setFullScreen();}
 
     }
@@ -151,14 +163,24 @@ public class GamePanel extends JPanel implements Runnable{
 
     }
     public void setFullScreen() {
-        //GET LOCAL SCREEN DEVICE
+
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice gd = ge.getDefaultScreenDevice();
+
+        // Make window undecorated BEFORE fullscreen
+        Main.window.dispose();
+        Main.window.setUndecorated(true);
+        Main.window.setResizable(false);
+
+        // Enter exclusive fullscreen mode
         gd.setFullScreenWindow(Main.window);
 
-        //GET FULL SCREEN WIDTH AND HEIGHT
-        screenWidth2 = Main.window.getWidth();
-        screenHeight2 = Main.window.getHeight();
+        // Apply the display mode if supported
+        DisplayMode dm = gd.getDisplayMode();
+        screenWidth2 = dm.getWidth();
+        screenHeight2 = dm.getHeight();
+
+        Main.window.createBufferStrategy(3);  // OR 3
     }
     public void startGameThread() {
         gameThread = new Thread(this);
@@ -167,10 +189,7 @@ public class GamePanel extends JPanel implements Runnable{
 
     @Override
     public void run() {
-        double drawInterval = (double) 1000000000 / FPS;
-        double delta = 0;
-        long lastTime = System.nanoTime();
-        long currentTime;
+
 
         while (gameThread != null) {
             currentTime = System.nanoTime();
@@ -263,6 +282,8 @@ public class GamePanel extends JPanel implements Runnable{
     //FOR FULL SCREEN (FIRST DRAW TO TEMP SCREEN INSTEAD OF J PANEL)
     public void drawToTempScreen() {
 
+        Graphics2D g2 = tempScreen.createGraphics();
+
         long drawStart = 0;
         if (keyH.showDebugText) drawStart = System.nanoTime();
 
@@ -343,10 +364,8 @@ public class GamePanel extends JPanel implements Runnable{
             }
         }
 
-        // =========================
-        // SORT & DRAW ENTITIES
-        // =========================
 
+        // SORT & DRAW ENTITIES
         Collections.sort(entityList,
                 Comparator.comparingInt(e -> (int) e.worldY)
         );
@@ -355,19 +374,16 @@ public class GamePanel extends JPanel implements Runnable{
             e.draw(g2);
         }
 
-        // =========================
-        // DRAW CANOPIES (OVERLAY)
-        // =========================
 
+        // DRAW CANOPIES (OVERLAY)
         for (int i = 0; i < tallObj[currentMap].length; i++) {
             if (tallObj[currentMap][i] != null) {
                 tallObj[currentMap][i].drawCanopy(g2);
             }
         }
 
-        // =========================
-// SOLID AREA DEBUG
-// =========================
+
+        // SOLID AREA DEBUG
         if (keyH.showCollisionBox) {
 
             // PLAYER
@@ -412,19 +428,16 @@ public class GamePanel extends JPanel implements Runnable{
 
         entityList.clear();
 
-        // =========================
+
         // ENVIRONMENT / UI
-        // =========================
 
         eManager.draw(g2);
         map.drawMiniMap(g2);
         csManager.draw(g2);
         ui.draw(g2);
 
-        // =========================
-        // DEBUG
-        // =========================
 
+        // DEBUG
         if (keyH.showDebugText) {
 
             long drawEnd = System.nanoTime();
@@ -455,15 +468,77 @@ public class GamePanel extends JPanel implements Runnable{
 
                 g2.fillRect(screenX,screenY,tileSize, tileSize);
             }
+
+
+            int screenCenterX = screenWidth / 2;
+            int screenCenterY = screenHeight / 2;
+
+            int size = 120;
+
+            int drawX = screenCenterX - size / 2;
+            int drawY = screenCenterY - size / 2;
+
+            g2.setColor(Color.RED);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawRect(drawX, drawY, size, size);
+
+            g2.setColor(Color.YELLOW);
+            g2.drawLine(screenCenterX - 10, screenCenterY, screenCenterX + 10, screenCenterY);
+            g2.drawLine(screenCenterX, screenCenterY - 10, screenCenterX, screenCenterY + 10);
         }
     }
 
-    public void drawToScreen() {
-        Graphics g = getGraphics();
-        g.drawImage(tempScreen, 0, 0,screenWidth2,screenHeight2,null);
-        g.dispose();
-    }
+    private int lastXOffset = 0;
+    private int lastYOffset = 0;
 
+    public void drawToScreen() {
+
+        BufferStrategy bs = Main.window.getBufferStrategy();
+        if (bs == null) {
+            // Try to create one if missing (should usually be created in toggleFullScreen or on startup)
+            try {
+                Main.window.createBufferStrategy(3);
+            } catch (IllegalStateException ise) {
+                // window not ready yet; skip this frame
+                return;
+            }
+            return;
+        }
+
+        Graphics2D g2 = (Graphics2D) bs.getDrawGraphics();
+
+        int xOffset = 0;
+        int yOffset = 0;
+
+        if (fullScreenOn) {
+            // ensure no leftover windowed offsets
+            lastXOffset = 0;
+            lastYOffset = 0;
+            xOffset = 0;
+            yOffset = 0;
+        } else {
+            // Windowed mode — read Insets, but only accept them when non-zero
+            Insets in = Main.window.getInsets();
+            int left = in.left;
+            int top  = in.top;
+
+            if (left != 0 || top != 0) {
+                // valid insets — update last-known good
+                lastXOffset = left;
+                lastYOffset = top;
+            }
+            // if insets are zero (very transient), we hold onto the last known good values
+            xOffset = lastXOffset;
+            yOffset = lastYOffset;
+        }
+
+        // finally draw scaled image
+        g2.drawImage(tempScreen, xOffset, yOffset, screenWidth2, screenHeight2, null);
+
+        g2.dispose();
+        bs.show();
+        Toolkit.getDefaultToolkit().sync();
+    }
 
     public void playMusic(int i) {
         music.setFile(i);

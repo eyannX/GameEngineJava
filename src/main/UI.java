@@ -47,6 +47,9 @@ public class UI {
     public boolean cursorOnChest = true;
 
 
+    public Rectangle[] menuBounds = new Rectangle[3]; // 3 menu options
+
+
 
     public UI(GamePanel gp) {
 
@@ -111,7 +114,7 @@ public class UI {
 
                 charIndex++;
             }
-            if(gp.keyH.enterPressed)
+            if(gp.keyH.enterPressed )
             {
                 charIndex = 0;
                 combinedText = "";
@@ -503,13 +506,22 @@ public class UI {
         // RIGHT: PLAYER
         drawInventory(gp.player, !cursorOnChest);
 
-        // HINT
-        int x = gp.tileSize * 6;
-        int y = gp.tileSize * 10;
-        int width = gp.tileSize * 8;
-        int height = gp.tileSize * 2;
-        drawSubWindow(x, y, width, height);
-        g2.drawString("[ENTER] Move Item   [E] Close", x + 24, y + 40);
+
+        BufferedImage subWindow;
+        try {
+            subWindow = ImageIO.read(getClass().getResourceAsStream("/UI/SubWindowDes.png"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+//        // HINT
+//        int x = gp.tileSize * 6;
+//        int y = gp.tileSize * 10;
+//        int width = gp.tileSize * 8;
+//        int height = gp.tileSize * 2;
+//        g2.drawImage(subWindow,x, y, width, height, null);
+//        g2.setColor(new Color(1,1,1));
+//        g2.drawString("[ENTER] Move Item   [E] Close", x + gp.tileSize, y + (gp.tileSize + 20));
     }
     public void transferItem() {
 
@@ -1303,8 +1315,10 @@ public class UI {
     public void options_control(int frameX,int frameY) {
         int textX;
         int textY;
+        g2.setColor(new Color(59,48,60));
 
         //TITLE
+
         String text = "Controls";
         textX = getXforCenteredText(text);
         textY = frameY + gp.tileSize;
@@ -1315,7 +1329,7 @@ public class UI {
         g2.drawString("Move", textX,textY); textY += gp.tileSize;
         g2.drawString("Confirm/Attack", textX,textY); textY += gp.tileSize;
         g2.drawString("Shoot/Cast", textX,textY); textY += gp.tileSize;
-        g2.drawString("Character Screen", textX,textY); textY += gp.tileSize;
+        g2.drawString("Inventory", textX,textY); textY += gp.tileSize;
         g2.drawString("Pause", textX,textY); textY += gp.tileSize;
         g2.drawString("Options", textX,textY); textY += gp.tileSize;
 
@@ -1345,6 +1359,9 @@ public class UI {
         }
     }
     public void options_endGameConfirmation(int frameX, int frameY) {
+
+        g2.setColor(new Color(59,48,60));
+
         int textX = frameX + gp.tileSize;
         int textY = frameY + gp.tileSize * 3;
 
@@ -1380,7 +1397,7 @@ public class UI {
         if(commandNum == 1)
         {
             g2.drawString(">",textX-25,textY);
-            if(gp.keyH.enterPressed == true)
+            if(gp.keyH.enterPressed)
             {
                 subState = 0;
                 commandNum = 4; //back to end row

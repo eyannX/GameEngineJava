@@ -20,9 +20,6 @@ public class Lighting {
     public boolean isNight = false;
     public boolean sleepTransition = false;
 
-    double delta;
-
-
 
 
     public Lighting(GamePanel gp) {
@@ -94,7 +91,7 @@ public class Lighting {
         filterAlpha = 0f;
 
     }
-    public void update(double dt) {
+    public void update() {
 
 
         if (sleepTransition) {
