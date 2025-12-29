@@ -27,10 +27,8 @@ public class AssetSetter {
         int mapNum = 0;
         int i = 0;
 
-        gp.obj[mapNum][i] = new OBJ_Axe(gp);
-        gp.obj[mapNum][i].worldX = gp.tileSize * 33;
-        gp.obj[mapNum][i].worldY = gp.tileSize * 7;
-        i++;
+        setAnimatedObject(0, i++, new OBJ_Campfire(gp), gp.tileSize * 16, gp.tileSize * 21);
+
         gp.obj[mapNum][i] = new OBJ_Lantern(gp);
         gp.obj[mapNum][i].worldX = gp.tileSize * 31;
         gp.obj[mapNum][i].worldY = gp.tileSize * 12;
@@ -54,6 +52,19 @@ public class AssetSetter {
         gp.obj[mapNum][i] = new OBJ_Key(gp);
         gp.obj[mapNum][i].worldX = gp.tileSize * 38;
         gp.obj[mapNum][i].worldY = gp.tileSize * 40;
+        i++;
+
+        gp.obj[mapNum][i] = new OBJ_Arrow(gp);
+        gp.obj[mapNum][i].worldX = gp.tileSize * 23;
+        gp.obj[mapNum][i].worldY = gp.tileSize * 15;
+        i++;
+        gp.obj[mapNum][i] = new OBJ_Arrow(gp);
+        gp.obj[mapNum][i].worldX = gp.tileSize * 23;
+        gp.obj[mapNum][i].worldY = gp.tileSize * 15;
+        i++;
+        gp.obj[mapNum][i] = new OBJ_Arrow(gp);
+        gp.obj[mapNum][i].worldX = gp.tileSize * 23;
+        gp.obj[mapNum][i].worldY = gp.tileSize * 15;
         i++;
 
         gp.obj[mapNum][i] = new OBJ_StorageChest(gp);
@@ -106,6 +117,8 @@ public class AssetSetter {
         gp.obj[mapNum][i].worldX = gp.tileSize * 25;
         gp.obj[mapNum][i].worldY = gp.tileSize * 8;
         i++;
+
+        gp.renderListDirty = true;
     }
 
     public void setNPC() {
@@ -144,6 +157,14 @@ public class AssetSetter {
         gp.npc[mapNum][i].worldY = gp.tileSize*14;
         i++;
 
+        gp.renderListDirty = true;
+    }
+    public void setAnimatedObject(int mapNum, int i, AnimatedObject obj, int worldX, int worldY) {
+
+        obj.worldX = worldX;
+        obj.worldY = worldY;
+        gp.obj[mapNum][i] = obj;
+        gp.animatedObjects.add(obj);
     }
     public void setMonster() {
 
@@ -243,7 +264,7 @@ public class AssetSetter {
             i++;
         }
 
-
+        gp.renderListDirty = true;
     }
     public void setInteractiveTile() {
 
@@ -304,5 +325,7 @@ public class AssetSetter {
         int i = 0;
 
         gp.tallObj[mapNum][i] = new TIT_BigTree(gp, 22, 22); i++;
+
+
     }
 }

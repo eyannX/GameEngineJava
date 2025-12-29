@@ -66,14 +66,22 @@ public class blue_butterfly extends Entity {
         right4 = setup("/animals/butterfly/butterfly_right4", 48, 48);
         right5 = setup("/animals/butterfly/butterfly_right5", 48, 48);
     }
+    @Override
+    protected int getMaxFrame() {
+       return 5;
+    }
+    @Override
+    protected int getAnimationSpeed() {
+
+        return 8;
+    }
 
 
     @Override
     public void setAction() {
 
-    /* =========================
-       1. DYING SAFETY
-       ========================= */
+
+       //DYING SAFETY
         if(dying) {
             speed = 0;
             return;

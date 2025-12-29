@@ -17,11 +17,17 @@ public class Player extends Entity{
     public boolean attackCanceled = false;
     public boolean lightUpdated = false;
     int maxSpriteFrames = 6;
-    int idleSpriteNum = 1;        // 1 or 2
+    int idleSpriteNum = 1;
     int idleCounter = 0;
     final int idleDelay = 30;     // higher = slower (30–60 feels good)
     int standStillCounter = 0;
     final int IDLE_START_DELAY = 200; // frames before idle anim starts
+    // Footstep system
+    private float stepDistanceCounter = 0f;
+    private final float STEP_DISTANCE = gp.tileSize * 1.3f; // tune this
+
+    public OBJ_Quiver equippedQuiver;
+
 
 
     int scale = 120;
@@ -89,7 +95,7 @@ public class Player extends Entity{
         currentWeapon = new OBJ_Sword_Normal(gp);
         currentShield = new OBJ_Shield_Wood(gp);
         currentLight = null;
-        projectile = new OBJ_Fireball(gp);
+        projectile = new OBJ_Arrow(gp);
         //projectile = new OBJ_Rock(gp);
         attack = getAttack();   // The total attack value is decided by strength and weapon
         defense = getDefense(); // The total defense value is decided by dexterity and shield
@@ -146,7 +152,7 @@ public class Player extends Entity{
         inventory.add(new OBJ_cookie(gp));
         inventory.add(new OBJ_cookie(gp));
         inventory.add(new OBJ_cookie(gp));
-        inventory.add(new OBJ_cookie(gp));
+        inventory.add(new OBJ_Quiver(gp));
         inventory.add(new OBJ_Bow(gp));
         inventory.add(new OBJ_Lantern(gp));
         inventory.add(new OBJ_Pickaxe(gp));
@@ -433,6 +439,34 @@ public class Player extends Entity{
         }
 
 
+        if(gp.keyH.quiverKeyPressed) {
+
+            OBJ_Quiver q = getQuiverFromInventory();
+
+            if(q != null) {
+                equippedQuiver = q;
+                gp.ui.quiverSlotRow = 0;
+                gp.gameState = gp.quiverState;
+            }
+
+            gp.keyH.quiverKeyPressed = false;
+            return;
+        }
+
+
+
+        if(gp.gameState == gp.quiverState) {
+
+            if(gp.keyH.dropKeyPressed) {
+                gp.ui.dropArrowFromQuiver();
+                gp.keyH.dropKeyPressed = false;
+            }
+
+            return;
+        }
+
+
+
         // ATTACKING
         if(attacking) {
             attacking();
@@ -501,23 +535,45 @@ public class Player extends Entity{
 
             // MOVE
             if(!collisionOn && !keyH.enterPressed) {
-                worldX +=  (dx * speed) ;
-                worldY +=  (dy * speed) ;
+
+                float moveSpeed = speed;
+
+                // Bow slow
+                if(currentWeapon.type == type_bow && chargingBow) {
+
+                    moveSpeed = BOW_CHARGE_SPEED_MULT;
+                }
+
+                float moveX = (float)(dx * moveSpeed);
+                float moveY = (float)(dy * moveSpeed);
+
+                worldX += moveX;
+                worldY += moveY;
+
+                // Footstep distance tracking
+                stepDistanceCounter += Math.abs(moveX) + Math.abs(moveY);
+
+                if(stepDistanceCounter >= STEP_DISTANCE) {
+                    stepDistanceCounter = 0;
+                    gp.playSE(23);
+                }
             }
+
 
             // ATTACK KEY
             if((keyH.enterPressed || gp.mouseH.leftJustClicked)
                     && !attackCanceled
+                    && !attacking
                     && currentWeapon.type != type_bow) {
 
                 gp.playSE(7);
                 attacking = true;
                 spriteCounter = 0;
             }
-
-            attackCanceled = false;
             gp.mouseH.leftJustClicked = false;
             keyH.enterPressed = false;
+            attackCanceled = false;
+
             guarding = false;
             guardCounter = 0;
 
@@ -534,11 +590,6 @@ public class Player extends Entity{
 
             }
 
-            //moving SE
-            if(movingCounter >= 22){
-                movingCounter = 0;
-                gp.playSE(23);
-            }
 
             // you have to eat every 5 min of moving
             isHungry++;
@@ -663,7 +714,7 @@ public class Player extends Entity{
             if (starvationCounter > 180) {
                 life--;
                 starvationCounter = 0;
-                int sound = new Random().nextInt(3);
+                int sound = RNG.nextInt(3);
                 gp.playSE(27 + sound);
             }
         }
@@ -672,49 +723,135 @@ public class Player extends Entity{
             isStarving = false;
             strength = defaultStrength;
         }
+
     }
     public void pickUpObject(int i) {
 
-        if(i != 999) {
-            // PICKUP ONLY ITEMS
-            if(gp.obj[gp.currentMap][i].type == type_pickupOnly ) {
-                gp.obj[gp.currentMap][i].use(this);
+        if(i == 999) return;
+
+        Entity obj = gp.obj[gp.currentMap][i];
+        String text;
+
+        // PICKUP ONLY 
+        if(obj.type == type_pickupOnly) {
+            obj.use(this);
+            gp.obj[gp.currentMap][i] = null;
+            gp.renderListDirty = true;
+            return;
+        }
+
+        // OBSTACLE / INTERACTABLE
+        if(obj.type == type_obstacle) {
+            if(keyH.enterPressed || keyH.ePressed) {
+                attackCanceled = true;
+                obj.interact();
+            }
+            return;
+        }
+
+        if(obj.type == type_solidLight){
+            return;
+        }
+
+        // ARROWS → QUIVER
+        if(obj.type == type_arrow) {
+            if(canObtainArrow(obj)) {
+                gp.playSE(1);
+                text = "Picked up arrows";
                 gp.obj[gp.currentMap][i] = null;
-            }
-            //OBSTACLE
-            else if(gp.obj[gp.currentMap][i].type == type_obstacle) {
-                if(keyH.enterPressed) {
-                    attackCanceled = true;
-                    gp.obj[gp.currentMap][i].interact();
-                }
-            }
-            // INVENTORY ITEMS
-            else{
-                String text;
-                if(canObtainItem(gp.obj[gp.currentMap][i])) //if inventory is not full can pick up object
-                {
-                    //inventory.add(gp.obj[gp.currentMap][i]); //canObtainItem() already adds item
-                    gp.playSE(1);
-                    text = "Got a " + gp.obj[gp.currentMap][i].name + "!";
-                    gp.obj[gp.currentMap][i] = null;
-                }
-                else{
+                gp.renderListDirty = true;
 
-                    text = "Inventory full!";
-                }
-                gp.ui.addMessage(text);
+            } else {
+                text = "No quiver space!";
+            }
+            gp.ui.addMessage(text);
+            return;
+        }
 
+        // CONTAINERS (QUIVER, BAGS, ETC.)
+        if(obj.type == type_container) {
+            if(canObtainContainer(obj)) {
+                gp.playSE(1);
+                text = "Picked up " + obj.name;
+                inventory.add(obj); // same instance
+                gp.obj[gp.currentMap][i] = null;
+                gp.renderListDirty = true;
+
+            } else {
+                text = "Inventory full!";
+            }
+            gp.ui.addMessage(text);
+            return;
+        }
+
+        // NORMAL ITEMS
+        if(canObtainItem(obj)) {
+            gp.playSE(1);
+            text = "Got a " + obj.name + "!";
+            gp.obj[gp.currentMap][i] = null;
+            gp.renderListDirty = true;
+
+        } else {
+            text = "Inventory full!";
+        }
+
+        gp.ui.addMessage(text);
+    }
+
+    public boolean canObtainArrow(Entity arrow) {
+
+        OBJ_Quiver quiver = getEquippedQuiver();
+        if(quiver == null) return false;
+
+        for(Entity a : quiver.inventory) {
+            if(a.name.equals(arrow.name)) {
+                a.amount += arrow.amount;
+                return true;
             }
         }
+
+        if(quiver.inventory.size() < quiver.maxInventorySize) {
+            quiver.inventory.add(arrow);
+            return true;
+        }
+
+        return false;
     }
+    public OBJ_Quiver getEquippedQuiver() {
+
+        if(equippedQuiver != null) return equippedQuiver;
+
+        for(Entity e : inventory) {
+            if(e instanceof OBJ_Quiver) {
+                equippedQuiver = (OBJ_Quiver)e;
+                return equippedQuiver;
+            }
+        }
+        return null;
+    }
+
+
+
+
     public void shootArrow() {
+
+        // 1. Must have a quiver
+        if(equippedQuiver == null) return;
+
+        // 2. Quiver must have arrows
+        if(equippedQuiver.inventory.isEmpty()) return;
+
+        // 3. Get current arrow type (top slot for now)
+        Entity arrowItem = equippedQuiver.inventory.get(0);
 
         for(int i = 0; i < gp.projectile[gp.currentMap].length; i++) {
 
             if(gp.projectile[gp.currentMap][i] == null ||
                     !gp.projectile[gp.currentMap][i].alive) {
 
-                Projectile arrow = new OBJ_Fireball(gp); // or your arrow class
+                // 4. Create projectile
+                Projectile arrow = new OBJ_Arrow(gp);
+                gp.renderListDirty = true;
 
                 float ratio = (float) bowCharge / MAX_BOW_CHARGE;
 
@@ -732,12 +869,23 @@ public class Player extends Entity{
                 );
 
                 gp.projectile[gp.currentMap][i] = arrow;
+
+                // 5. Consume ONE arrow
+                arrowItem.amount--;
+
+                if(arrowItem.amount <= 0) {
+                    equippedQuiver.inventory.remove(0);
+                }
+
                 gp.playSE(10);
                 break;
             }
         }
-    }
 
+        // 6. Reset charge after shot
+        bowCharge = 0;
+        chargingBow = false;
+    }
 
     public void interactNPC(int i) {
 
@@ -926,6 +1074,16 @@ public class Player extends Entity{
             }
         }
     }
+    public OBJ_Quiver getQuiverFromInventory() {
+
+        for(Entity item : inventory) {
+            if(item instanceof OBJ_Quiver) {
+                return (OBJ_Quiver) item;
+            }
+        }
+        return null;
+    }
+
     public void draw(Graphics2D g2) {
 
 
@@ -1108,27 +1266,4 @@ public class Player extends Entity{
 
         }
     }
-
-    private BufferedImage getBowChargeImage(int frame) {
-        switch (direction) {
-            case "up":
-                return frame == 1 ? attackUp1 :
-                        frame == 2 ? attackUp2 :
-                                frame == 3 ? attackUp3 : attackUp4;
-            case "down":
-                return frame == 1 ? attackDown1 :
-                        frame == 2 ? attackDown2 :
-                                frame == 3 ? attackDown3 : attackDown4;
-            case "left":
-                return frame == 1 ? attackLeft1 :
-                        frame == 2 ? attackLeft2 :
-                                frame == 3 ? attackLeft3 : attackLeft4;
-            case "right":
-                return frame == 1 ? attackRight1 :
-                        frame == 2 ? attackRight2 :
-                                frame == 3 ? attackRight3 : attackRight4;
-        }
-        return attackDown1;
-    }
-
 }

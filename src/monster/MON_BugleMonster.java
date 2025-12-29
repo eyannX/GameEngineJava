@@ -17,7 +17,7 @@ public class MON_BugleMonster extends Entity {
         this.gp = gp;
 
         type = type_monster;
-        name = "Green Slime";
+        name = "Bugle Monster";
         defaultSpeed = 1;
         speed = defaultSpeed;
         maxLife = 4;
@@ -26,7 +26,7 @@ public class MON_BugleMonster extends Entity {
         defense = 0;
         exp = 2;
         hostile = true;
-        projectile = new OBJ_Fireball(gp);
+        projectile = new OBJ_Arrow(gp);
 
 
         solidArea.x = 3;

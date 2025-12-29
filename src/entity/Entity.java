@@ -1,6 +1,7 @@
 package entity;
 
 import main.GamePanel;
+import main.Sound;
 import main.UtilityTool;
 
 import javax.imageio.ImageIO;
@@ -82,6 +83,8 @@ public class Entity {
 
 
 
+    public boolean inCamera;
+    public static final Random RNG = new Random();
 
 
 
@@ -100,6 +103,8 @@ public class Entity {
     public int regenCounter = 0;
     public int starvationCounter;
     public int movingCounter;
+
+
 
     //CHARACTER ATTRIBUTES
     public String name;
@@ -135,6 +140,8 @@ public class Entity {
     public int maxSpriteNum = 2;
 
 
+
+
     //ITEM ATTRIBUTES
     public ArrayList<Entity> inventory = new ArrayList<>();
     public int maxInventorySize = 20;
@@ -148,14 +155,20 @@ public class Entity {
     public boolean stackable = false;
     public int amount = 1;
     public int lightRadius;
+
+
+
+
     // Bow charge
     public boolean chargingBow = false;
     public int bowCharge = 0;
     public final int MAX_BOW_CHARGE = 60; //1 second at 60 FPS
     public final int MIN_BOW_CHARGE = 10;
-    public final float BOW_CHARGE_SPEED_MULT = 0.25f;
+    public final float BOW_CHARGE_SPEED_MULT = 0.09f;
 
-
+    //sound
+    public Sound ambientSound;
+    public int soundRange = 400;
 
     //TYPE
     public int type; // 0=player, 1=npc, 2=monster etc.
@@ -172,6 +185,9 @@ public class Entity {
     public final int type_pickaxe = 10;
     public final int type_edible = 11;
     public final int type_bow = 12;
+    public final int type_container = 13;
+    public final int type_arrow = 14;
+    public final int type_solidLight = 15;
 
 
 
@@ -391,6 +407,8 @@ public class Entity {
             System.out.println(name + " hostile=" + hostile + " attack=" + attack);
         }
     }
+
+
     public void update() {
 
         if (sleep) return;
@@ -420,10 +438,7 @@ public class Entity {
                 speed = defaultSpeed;
             }
         }
-    /* =========================
-       2. ATTACK LOGIC IS HANDLED IN setAction() AND SPRITE ANIMATION
-       SO NO CALL TO attacking() METHOD
-       ========================= */
+
         else {
             setAction();
             checkCollision();
@@ -438,31 +453,31 @@ public class Entity {
             }
         }
 
+        if(inCamera) {
+            //SPRITE ANIMATION
+            spriteCounter++;
+            if (spriteCounter >= getAnimationSpeed()) {
+                spriteCounter = 0;
+                spriteNum++;
 
-       //SPRITE ANIMATION (ALWAYS)
-        spriteCounter++;
-        if (spriteCounter >= getAnimationSpeed()) {
-            spriteCounter = 0;
-            spriteNum++;
+                int maxFrame = getMaxFrame();
 
-            int maxFrame = getMaxFrame();
+                if (spriteNum > maxFrame) {
 
-            if (spriteNum > maxFrame) {
+                    if (attacking) {
+                        attacking = false;
+                        attackCooldown = attackCooldownMax; // IMPORTANT: reset cooldown here
+                    }
 
-                if (attacking) {
-                    attacking = false;
-                    attackCooldown = attackCooldownMax; // IMPORTANT: reset cooldown here
-                }
+                    spriteNum = 1;
 
-                spriteNum = 1;
-
-                if (screaming) {
-                    screaming = false;
-                    speed = defaultSpeed;
+                    if (screaming) {
+                        screaming = false;
+                        speed = defaultSpeed;
+                    }
                 }
             }
         }
-
     /* =========================
        4. TIMERS
        ========================= */
@@ -869,6 +884,7 @@ public class Entity {
         return inCamera;
     }
 
+
     public void drawSolidArea(Graphics2D g2, GamePanel gp) {
 
         int screenX = (int)(worldX + solidArea.x - gp.player.worldX + gp.player.screenX);
@@ -985,6 +1001,11 @@ public class Entity {
         }
         return  canObtain;
     }
+    public boolean canObtainContainer(Entity container) {
+        // Only check inventory size limit for containers
+        return inventory.size() < maxInventorySize;
+    }
+
     public Entity copy() {
         Entity clone = new Entity(gp);  // or however you instantiate your Entity
 
@@ -1043,9 +1064,10 @@ public class Entity {
         if(dyingCounter > i*5 && dyingCounter <= i*6) {changeAlpha(g2,1f);}
         if(dyingCounter > i*6 && dyingCounter <= i*7) {changeAlpha(g2,0f);}
         if(dyingCounter > i*7 && dyingCounter <= i*8) {changeAlpha(g2,1f);}
-        if(dyingCounter > i*8)
+        if(dyingCounter > i*8 && alive)
         {
             alive = false;
+            gp.renderListDirty = true;
         }
     }
     public void changeAlpha(Graphics2D g2, float alphaValue) {
@@ -1194,6 +1216,15 @@ public class Entity {
         }
         return  index;
     }
+    public boolean isInCameraView(int camLeft, int camTop, int camRight, int camBottom, int tileSize) {
+        int entityLeft = (int) this.worldX;
+        int entityRight = entityLeft + tileSize;   // Or use entity width if available
+        int entityTop = (int) this.worldY;
+        int entityBottom = entityTop + tileSize;   // Or entity height if available
+
+        return !(entityRight < camLeft || entityLeft > camRight || entityBottom < camTop || entityTop > camBottom);
+    }
+
     public BufferedImage[] loadSpriteSheet(String imagePath, int frameWidth, int frameHeight, int frameCount, int scale) {
 
         BufferedImage spriteSheet;
@@ -1227,4 +1258,41 @@ public class Entity {
 
         return frames;
     }
+
+    public void drawDebugSolidArea(Graphics2D g2) {
+
+        // Convert world position to screen position
+        int screenX = (int)(worldX + solidArea.x - gp.player.worldX + gp.player.screenX);
+        int screenY = (int)(worldY + solidArea.y - gp.player.worldY + gp.player.screenY);
+
+        // Semi-transparent red
+        Color oldColor = g2.getColor();
+        Composite oldComposite = g2.getComposite();
+
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+        g2.setColor(Color.RED);
+
+        g2.fillRect(
+                screenX,
+                screenY,
+                solidArea.width,
+                solidArea.height
+        );
+
+        // Outline for clarity
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+
+        g2.setColor(Color.BLACK);
+        g2.drawRect(
+                screenX,
+                screenY,
+                solidArea.width,
+                solidArea.height
+        );
+
+        // Restore graphics state
+        g2.setColor(oldColor);
+        g2.setComposite(oldComposite);
+    }
+
 }

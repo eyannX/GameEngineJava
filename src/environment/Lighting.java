@@ -1,11 +1,9 @@
 package environment;
-
 import main.GamePanel;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class Lighting {
+public class Lighting extends EnvironmentManager {
 
     GamePanel gp;
     BufferedImage darknessFilter;
@@ -23,7 +21,7 @@ public class Lighting {
 
 
     public Lighting(GamePanel gp) {
-
+        super(gp);
         this.gp = gp;
         setLightSource();
     }
@@ -110,7 +108,7 @@ public class Lighting {
             dayCounter++;
 
             //10 min day
-            if(dayCounter > 12000) {
+            if(dayCounter > 160) {
                 dayState = dusk;
                 dayCounter = 0;
             }
@@ -141,7 +139,7 @@ public class Lighting {
                 gp.playMusic(0);
                 dayState = dawn;
                 dayCounter = 0;
-                
+
             }
         }
 

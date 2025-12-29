@@ -13,7 +13,7 @@ public class Sound {
     FloatControl fc;
     int volumeScale = 3;
     float volume;
-    boolean looping = false;
+    public boolean looping = false;
     boolean active = false;
 
 
@@ -59,6 +59,7 @@ public class Sound {
         soundURL[37] = getClass().getResource("/sound/chickenEat.wav");
         soundURL[38] = getClass().getResource("/sound/parrotScream.wav");
         soundURL[39] = getClass().getResource("/sound/parrotHurt.wav");
+        soundURL[40] = getClass().getResource("/sound/fireSound.wav");
 
 
         /*sound = new Sound();
@@ -140,10 +141,11 @@ public class Sound {
         }
 
         // Logarithmic falloff (realistic)
-        double normalized = distance / maxDistance;
+        double normalized = 1.0 - (distance / maxDistance);
+        normalized = Math.max(0.0, Math.min(1.0, normalized));
 
         // Prevent log(0)
-        float volume = (float)(-20f * Math.log10(normalized + 0.01));
+        float volume = (float)(20.0 * Math.log10(normalized));
 
         // Clamp volume
         volume = Math.max(volume, -80f);

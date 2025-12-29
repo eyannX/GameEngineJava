@@ -20,8 +20,8 @@ public class OBJ_Axe extends Entity {
         description = "[" + name + "]\nA bit rusty but still can cut \nsome trees.";
         price = 75;
         knockBackPower = 5;
-        motion1_duration = 20;
-        motion2_duration = 40;
+        motion1_duration = 15;
+        motion2_duration = 35;
     }
     public BufferedImage getCurrentImage() {
 

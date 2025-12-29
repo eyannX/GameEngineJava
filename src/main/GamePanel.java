@@ -9,14 +9,18 @@ import tile.Map;
 import tile.TileManager;
 import tile_interactive.InteractiveTile;
 import tile_interactive.TallInteractiveObject;
-
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 
 
 public class GamePanel extends JPanel implements Runnable{
@@ -46,6 +50,15 @@ public class GamePanel extends JPanel implements Runnable{
     BufferedImage tempScreen;
     Graphics2D g2;
     public boolean fullScreenOn = false;
+
+    // Camera (render-only)
+    public float cameraX;
+    public float cameraY;
+
+
+
+
+    public boolean renderListDirty = true;
 
 
     //game loop
@@ -82,9 +95,11 @@ public class GamePanel extends JPanel implements Runnable{
     public InteractiveTile[][] iTile = new InteractiveTile[maxMap][50];
     public TallInteractiveObject[][] tallObj = new TallInteractiveObject[maxMap][50];
     public Entity[][] projectile = new Entity[maxMap][20]; // cut projectile
-    //public ArrayList<Entity> projectileList = new ArrayList<>();
+    public ArrayList<Entity> animatedObjects = new ArrayList<>();
     public ArrayList<Entity> particleList = new ArrayList<>();
-    ArrayList<Entity> entityList = new ArrayList<>();
+    public ArrayList<Entity> entityList = new ArrayList<>();
+    ArrayList<Entity> visibleEntities = new ArrayList<>();
+
 
 
     //GAME STATE
@@ -102,6 +117,7 @@ public class GamePanel extends JPanel implements Runnable{
     public final int mapState = 10;
     public final int cutsceneState = 11;
     public final int chestState = 12;
+    public final int quiverState = 13;
 
     //OTHERS
     public boolean bossBattleOn = false;
@@ -122,6 +138,10 @@ public class GamePanel extends JPanel implements Runnable{
         this.addKeyListener(keyH);
         this.addMouseListener(mouseH);
         this.addMouseMotionListener(mouseH);
+
+        cameraX = (float) (player.worldX - player.screenX);
+        cameraY = (float) (player.worldY - player.screenY);
+
         this.requestFocusInWindow();
         this.setFocusable(true);
     }
@@ -190,37 +210,48 @@ public class GamePanel extends JPanel implements Runnable{
     @Override
     public void run() {
 
-
         while (gameThread != null) {
-            currentTime = System.nanoTime();
 
+            currentTime = System.nanoTime();
             long elapsed = currentTime - lastTime;
             lastTime = currentTime;
 
-            // Clamp elapsed time to prevent huge delta spikes
+            // Clamp elapsed time
             if (elapsed > drawInterval * 5) {
-                elapsed = (long) (drawInterval * 5);  // Max 5 frames worth of time per update
+                elapsed = (long) (drawInterval * 5);
             }
 
             delta += (double) elapsed / drawInterval;
 
-            if (delta >= 1) {
+            // Consume ALL pending updates
+            while (delta >= 1) {
                 update();
-                /*repaint(); COMMENTED FOR FULL SCREEN*/
-                drawToTempScreen(); //FOR FULL SCREEN - Draw everything to the buffered image
-                drawToScreen();     //FOR FULL SCREEN - Draw the buffered image to the screen
                 delta--;
-                //drawCount++;
             }
+
+            // Render once
+            drawToTempScreen();
+            drawToScreen();
         }
     }
 
+
     public void update() {
+
+        if(keyH.f2Pressed) {
+            saveScreenshot();
+            keyH.f2Pressed = false;
+        }
+        if(ui.notificationCounter > 0) {
+            ui.notificationCounter--;
+        }
 
         if(gameState == playState) {
 
             //PLAYER
             player.update();
+
+
 
             //NPC
             for(int i = 0; i < npc[1].length; i++) {
@@ -273,6 +304,21 @@ public class GamePanel extends JPanel implements Runnable{
                 }
             }
 
+            //animated objects
+            for (Entity e : animatedObjects) {
+                if (e != null) {
+                    e.update();  // updates animation frames, logic, etc.
+                    if (e.ambientSound != null) {
+
+                        e.ambientSound.setVolumeByDistance((int) player.worldX,
+                                (int) player.worldY, (int) e.worldX, (int) e.worldY, e.soundRange
+                        );
+                    }
+                }
+
+            }
+
+
             eManager.update();
         }
 
@@ -282,6 +328,12 @@ public class GamePanel extends JPanel implements Runnable{
     //FOR FULL SCREEN (FIRST DRAW TO TEMP SCREEN INSTEAD OF J PANEL)
     public void drawToTempScreen() {
 
+        int camLeft = (int)(player.worldX - player.screenX) - tileSize;
+        int camTop = (int)(player.worldY - player.screenY) - tileSize;
+        int camRight = camLeft + screenWidth + tileSize;
+        int camBottom = camTop + screenHeight + tileSize;
+
+
         Graphics2D g2 = tempScreen.createGraphics();
 
         long drawStart = 0;
@@ -290,89 +342,73 @@ public class GamePanel extends JPanel implements Runnable{
         // TITLE
         if (gameState == titleState) {
             ui.draw(g2);
+            g2.dispose();
             return;
         }
 
         // MAP
         if (gameState == mapState) {
             map.drawFullMapScreen(g2);
+            g2.dispose();
             return;
         }
 
 
-        // WORLD RENDER
 
 
-        // GROUND TILES
+
+        // GROUND TILES                                                     // WORLD RENDER
         tileM.draw(g2);
 
 
-        // BUILD ENTITY LIST
-        entityList.add(player);
+        if(renderListDirty) {
+            //Build Entity List
+            entityList.clear();
 
-        // NPCs
-        for (int i = 0; i < npc[currentMap].length; i++) {
-            if (npc[currentMap][i] != null) {
-                entityList.add(npc[currentMap][i]);
-            }
+            entityList.add(player);
+
+            for (int i = 0; i < npc[currentMap].length; i++)
+            {if (npc[currentMap][i] != null) {entityList.add(npc[currentMap][i]);}}
+
+            for (int i = 0; i < obj[currentMap].length; i++)
+            {if (obj[currentMap][i] != null) {entityList.add(obj[currentMap][i]);}}
+
+            for (Entity e : animatedObjects) {entityList.add(e);}
+
+            for (int i = 0; i < monster[currentMap].length; i++)
+            {if (monster[currentMap][i] != null) {entityList.add(monster[currentMap][i]);}}
+
+            for (int i = 0; i < projectile[currentMap].length; i++)
+            {if (projectile[currentMap][i] != null) {entityList.add(projectile[currentMap][i]);}}
+
+            for (Entity p : particleList) {entityList.add(p);}
+
+            for (int i = 0; i < tallObj[currentMap].length; i++)
+            {if (tallObj[currentMap][i] != null) {entityList.add(tallObj[currentMap][i]);}}
+
+            renderListDirty = false;
         }
-
-        // OBJECTS
-        for (int i = 0; i < obj[currentMap].length; i++) {
-            if (obj[currentMap][i] != null) {
-                entityList.add(obj[currentMap][i]);
-            }
-        }
-
-        // MONSTERS
-        for (int i = 0; i < monster[currentMap].length; i++) {
-            if (monster[currentMap][i] != null) {
-                entityList.add(monster[currentMap][i]);
-            }
-        }
-
-        // PROJECTILES
-        for (int i = 0; i < projectile[currentMap].length; i++) {
-            if (projectile[currentMap][i] != null) {
-                entityList.add(projectile[currentMap][i]);
-            }
-        }
-
-        // PARTICLES
-        for (int i = 0; i < particleList.size(); i++) {
-            if (particleList.get(i) != null) {
-                entityList.add(particleList.get(i));
-            }
-        }
-
-
-//        for (int i = 0; i < iTile[currentMap].length; i++) {
-//            if (iTile[currentMap][i] != null) {
-//                entityList.add(iTile[currentMap][i]);
-//            }
-//        }
-        //            //INTERACTIVE TILE
-            for(int i = 0; i < iTile[1].length; i++) {
-
-                if(iTile[currentMap][i] != null) {iTile[currentMap][i].draw(g2);}
-            }
-
-        // TALL OBJECT TRUNKS
-        for (int i = 0; i < tallObj[currentMap].length; i++) {
-            if (tallObj[currentMap][i] != null) {
-                entityList.add(tallObj[currentMap][i]);
-            }
-        }
-
 
         // SORT & DRAW ENTITIES
-        Collections.sort(entityList,
-                Comparator.comparingInt(e -> (int) e.worldY)
-        );
+        Collections.sort(entityList, Comparator.comparingInt(e -> (int) e.worldY));
+
+        // INTERACTIVE TILES
+        for (int i = 0; i < iTile[currentMap].length; i++) {
+            if (iTile[currentMap][i] != null) {
+                iTile[currentMap][i].draw(g2);
+            }
+        }
+
 
         for (Entity e : entityList) {
-            e.draw(g2);
+            boolean visible = e.isInCameraView(camLeft, camTop, camRight, camBottom, tileSize);
+            e.inCamera = visible;
+
+            if (visible) {
+                e.draw(g2);
+            }
         }
+
 
 
         // DRAW CANOPIES (OVERLAY)
@@ -384,49 +420,49 @@ public class GamePanel extends JPanel implements Runnable{
 
 
         // SOLID AREA DEBUG
-        if (keyH.showCollisionBox) {
+//        if (keyH.showCollisionBox) {
+//
+//            // PLAYER
+//            player.drawSolidArea(g2, this);
+//
+//            // NPCs
+//            for (int i = 0; i < npc[currentMap].length; i++) {
+//                if (npc[currentMap][i] != null) {
+//                    npc[currentMap][i].drawSolidArea(g2, this);
+//                }
+//            }
+//
+//            // MONSTERS
+//            for (int i = 0; i < monster[currentMap].length; i++) {
+//                if (monster[currentMap][i] != null) {
+//                    monster[currentMap][i].drawSolidArea(g2, this);
+//                }
+//            }
+//
+//            // OBJECTS
+//            for (int i = 0; i < obj[currentMap].length; i++) {
+//                if (obj[currentMap][i] != null) {
+//                    obj[currentMap][i].drawSolidArea(g2, this);
+//                }
+//            }
+//
+//            // INTERACTIVE TILES (1x1)
+//            for (int i = 0; i < iTile[currentMap].length; i++) {
+//                if (iTile[currentMap][i] != null) {
+//                    iTile[currentMap][i].drawSolidArea(g2, this);
+//                }
+//            }
+//
+//            // TALL OBJECT TRUNKS
+//            for (int i = 0; i < tallObj[currentMap].length; i++) {
+//                if (tallObj[currentMap][i] != null) {
+//                    tallObj[currentMap][i].drawSolidArea(g2, this);
+//                }
+//            }
+//        }
 
-            // PLAYER
-            player.drawSolidArea(g2, this);
-
-            // NPCs
-            for (int i = 0; i < npc[currentMap].length; i++) {
-                if (npc[currentMap][i] != null) {
-                    npc[currentMap][i].drawSolidArea(g2, this);
-                }
-            }
-
-            // MONSTERS
-            for (int i = 0; i < monster[currentMap].length; i++) {
-                if (monster[currentMap][i] != null) {
-                    monster[currentMap][i].drawSolidArea(g2, this);
-                }
-            }
-
-            // OBJECTS
-            for (int i = 0; i < obj[currentMap].length; i++) {
-                if (obj[currentMap][i] != null) {
-                    obj[currentMap][i].drawSolidArea(g2, this);
-                }
-            }
-
-            // INTERACTIVE TILES (1x1)
-            for (int i = 0; i < iTile[currentMap].length; i++) {
-                if (iTile[currentMap][i] != null) {
-                    iTile[currentMap][i].drawSolidArea(g2, this);
-                }
-            }
-
-            // TALL OBJECT TRUNKS
-            for (int i = 0; i < tallObj[currentMap].length; i++) {
-                if (tallObj[currentMap][i] != null) {
-                    tallObj[currentMap][i].drawSolidArea(g2, this);
-                }
-            }
-        }
 
 
-        entityList.clear();
 
 
         // ENVIRONMENT / UI
@@ -584,5 +620,35 @@ public class GamePanel extends JPanel implements Runnable{
                 }
             }
         }
+    }
+    public void saveScreenshot() {
+
+
+        try {
+            // existing screenshot saving code...
+            BufferedImage imageToSave = tempScreen;
+
+            // Create screenshots directory if it doesn't exist
+            File screenshotsDir = new File("screenshots");
+            if (!screenshotsDir.exists()) {
+                screenshotsDir.mkdir();
+            }
+
+            //filename timestamp
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+            File outputFile = new File(screenshotsDir, "screenshot_" + timestamp + ".png");
+
+            try {
+                ImageIO.write(imageToSave, "png", outputFile);
+                System.out.println("Screenshot saved: " + outputFile.getAbsolutePath());
+            } catch (IOException e) {
+                System.out.println("Error code: apple-1");
+            }
+            ui.showNotification("Screenshot saved!");
+        } catch (Exception e) {
+            ui.showNotification("Failed to save screenshot!");
+            System.out.println("Error code: apple-2");
+        }
+
     }
 }

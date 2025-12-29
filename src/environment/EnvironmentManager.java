@@ -1,17 +1,25 @@
 package environment;
+import entity.Entity;
 import main.GamePanel;
 import java.awt.*;
+import java.util.ArrayList;
 
-public class EnvironmentManager {
+public class EnvironmentManager extends Entity{
 
     GamePanel gp;
     public Lighting lighting;
 
-    public EnvironmentManager(GamePanel gp) {
 
+    public EnvironmentManager(GamePanel gp) {
+        super(gp);
         this.gp = gp;
     }
     public void setup() {
+
+        for (Entity e : gp.entityList) {
+            e.update();
+
+        }
 
         lighting = new Lighting(gp);
     }

@@ -19,6 +19,7 @@ public class OBJ_Lantern extends Entity {
         description = "[Lantern]\nIlluminates your \nsurroundings.";
         price = 200;
         lightRadius = 350;
+
     }
     public BufferedImage getCurrentImage() {
 

@@ -38,9 +38,8 @@ public abstract class TallInteractiveObject extends Entity {
         worldY -= (spriteHeight - gp.tileSize);
     }
 
-    // =========================
+
     // DRAW TRUNK (Y-SORTED)
-    // =========================
     @Override
     public void draw(Graphics2D g2) {
 
@@ -68,9 +67,8 @@ public abstract class TallInteractiveObject extends Entity {
         }
     }
 
-    // =========================
-    // DRAW CANOPY (OVERLAY)
-    // =========================
+
+    // DRAW CANOPY
     public void drawCanopy(Graphics2D g2) {
 
         if (!hasCanopy) return;
@@ -92,9 +90,8 @@ public abstract class TallInteractiveObject extends Entity {
         );
     }
 
-    // =========================
+
     // SCREEN CHECK
-    // =========================
     protected boolean isOnScreen() {
         return worldX + spriteWidth > gp.player.worldX - gp.player.screenX &&
                 worldX - spriteWidth < gp.player.worldX + gp.player.screenX &&

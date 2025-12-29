@@ -6,7 +6,9 @@ import java.awt.event.KeyListener;
 public class KeyHandler implements KeyListener {
 
     GamePanel gp;
-    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,shotKeyPressed, spacePressed, dropKeyPressed, ePressed, shiftPressed ;
+    public boolean upPressed, downPressed, leftPressed,rightPressed,enterPressed,
+            shotKeyPressed, spacePressed, dropKeyPressed, ePressed, shiftPressed,
+              quiverKeyPressed, f2Pressed;
 
     //DEBUG
     public boolean showDebugText = false;
@@ -25,6 +27,8 @@ public class KeyHandler implements KeyListener {
     public void keyPressed(KeyEvent e) {
 
         int code = e.getKeyCode();
+
+        if(code == KeyEvent.VK_F2) {f2Pressed = true;}
 
         //TITLE STATE
         if(gp.gameState == gp.titleState) {
@@ -73,7 +77,9 @@ public class KeyHandler implements KeyListener {
         else if (gp.gameState == gp.chestState) {
             chestState(code);
             //System.out.println("Cursor on chest? " + gp.ui.cursorOnChest + " chestSlot: " + gp.ui.chestSlotRow + "," + gp.ui.chestSlotCol + " playerSlot: " + gp.ui.playerSlotRow + "," + gp.ui.playerSlotCol);
-
+        }
+        else if (gp.gameState == gp.quiverState) {
+            quiverState(code);
         }
 
     }
@@ -112,87 +118,37 @@ public class KeyHandler implements KeyListener {
             }
         }
     }
-    public void playState(int code)
-    {
-        if(code == KeyEvent.VK_W)
-        {
-            upPressed = true;
-        }
-        if(code == KeyEvent.VK_S)
-        {
-            downPressed = true;
-        }
-        if(code == KeyEvent.VK_A)
-        {
-            leftPressed = true;
-        }
-        if(code == KeyEvent.VK_D)
-        {
-            rightPressed = true;
-        }
-        if(code == KeyEvent.VK_P)
-        {
-            gp.gameState = gp.pauseState;
-        }
-        if(code == KeyEvent.VK_C)
-        {
-            gp.playSE(26);
-            gp.gameState = gp.characterState;
-        }
-        if(code == KeyEvent.VK_ENTER)
-        {
-            enterPressed = true;
-        }
+    public void playState(int code) {
 
-        if(code == KeyEvent.VK_F)
-        {
-            shotKeyPressed = true;
-        }
-        if(code == KeyEvent.VK_ESCAPE)
-        {
-            gp.gameState = gp.optionsState;
-        }
-        if(code == KeyEvent.VK_M)
-        {
-            gp.gameState = gp.mapState;
-        }
-        if(code == KeyEvent.VK_X)
-        {
-            if(!gp.map.miniMapOn)
-            {
+        if(code == KeyEvent.VK_W) {upPressed = true;}
+        if(code == KeyEvent.VK_S) {downPressed = true;}
+        if(code == KeyEvent.VK_A) {leftPressed = true;}
+        if(code == KeyEvent.VK_D) {rightPressed = true;}
+        if(code == KeyEvent.VK_P) {gp.gameState = gp.pauseState;}
+        if(code == KeyEvent.VK_C) {gp.playSE(26);gp.gameState = gp.characterState;}
+        if(code == KeyEvent.VK_ENTER) {enterPressed = true;}
+        if(code == KeyEvent.VK_F) {shotKeyPressed = true;}
+        if(code == KeyEvent.VK_ESCAPE) {gp.gameState = gp.optionsState;}
+        if(code == KeyEvent.VK_M) {gp.gameState = gp.mapState;}
+        if(code == KeyEvent.VK_X) {
+            if(!gp.map.miniMapOn) {
                 gp.map.miniMapOn = true;
-            }
-            else
-            {
+            } else {
                 gp.map.miniMapOn = false;
             }
         }
-        if(code == KeyEvent.VK_SPACE)
-        {
-            spacePressed = true;
-        }
+        if(code == KeyEvent.VK_SPACE) {spacePressed = true;}
+        if(code == KeyEvent.VK_Z) {quiverKeyPressed = true;}
+
 
         //DEBUG
         if(code == KeyEvent.VK_F3) {
 
+            if(!showCollisionBox) {showCollisionBox = true;}
+            else {showCollisionBox = false;}
 
-
-            if(!showCollisionBox) {
-                showCollisionBox = true;
-            }
-            else
-            {
-                showCollisionBox = false;
-            }
-
-
-            if(!showDebugText)
-            {
-                showDebugText = true;
-            }
-            else {
-                showDebugText = false;
-            }
+            if(!showDebugText) {showDebugText = true;}
+            else {showDebugText = false;}
         }
 
         if(code == KeyEvent.VK_R)   //Refresh Map without restarting game // Save Map File : in IntellijIDE "Ctrl + F9", in Eclipce "Ctrl + S"
@@ -433,6 +389,34 @@ public class KeyHandler implements KeyListener {
             }
         }
     }
+    public void quiverState(int code) {
+
+        // Move cursor (1 column, 5 rows)
+        if(code == KeyEvent.VK_W) {
+            if(gp.ui.quiverSlotRow > 0) {
+                gp.ui.quiverSlotRow--;
+                gp.playSE(9);
+            }
+        }
+
+        if(code == KeyEvent.VK_S) {
+            if(gp.ui.quiverSlotRow < 4) {
+                gp.ui.quiverSlotRow++;
+                gp.playSE(9);
+            }
+        }
+
+        // Drop arrow
+        if(code == KeyEvent.VK_Q) {
+            dropKeyPressed = true;
+        }
+
+        // Close quiver
+        if(code == KeyEvent.VK_Z || code == KeyEvent.VK_ESCAPE) {
+            gp.gameState = gp.playState;
+        }
+    }
+
     public void chestState(int code) {
 
         // MOVE CURSOR
@@ -594,6 +578,9 @@ public class KeyHandler implements KeyListener {
         }
         if(code == KeyEvent.VK_E){
             ePressed = false;
+        }
+        if(code == KeyEvent.VK_F2){
+            f2Pressed = false;
         }
     }
 }

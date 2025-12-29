@@ -2,6 +2,8 @@ package tile_interactive;
 
 import entity.Entity;
 import main.GamePanel;
+import object.OBJ_Chicken;
+import object.OBJ_Log;
 
 import java.awt.*;
 
@@ -21,6 +23,8 @@ public class IT_DryTree extends InteractiveTile{
         life = 2;
 
     }
+
+
     public boolean isCorrectItem(Entity entity) {
 
         boolean isCorrectItem = false;
@@ -28,6 +32,11 @@ public class IT_DryTree extends InteractiveTile{
             isCorrectItem = true;
         }
         return isCorrectItem;
+    }
+    public void checkDrop() {
+
+            dropItem(new OBJ_Log(gp));
+
     }
     public void playSE()
     {

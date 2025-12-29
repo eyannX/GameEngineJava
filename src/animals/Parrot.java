@@ -14,7 +14,8 @@ public class Parrot extends Entity {
     GamePanel gp;
     Random random = new Random();
 
-    Sound sound;
+    public Sound sound;
+    public int soundRange;
 
     // AI timing
     int stateCounter = 0;
@@ -63,6 +64,12 @@ public class Parrot extends Entity {
         attackArea.height = gp.tileSize;     // height, maybe smaller if attack is only horizontal
         attackArea.x = 0;                    // local offset if needed
         attackArea.y = 0;
+
+        sound = new Sound();
+        sound.setFile(38); // scream sound
+        sound.looping = false;
+
+        soundRange = gp.tileSize * 5;
 
         getImage();
         getScreamImage();
@@ -159,9 +166,8 @@ public class Parrot extends Entity {
     @Override
     public void setAction() {
 
-    /* =========================
-       1. COLLISION RESOLUTION
-       ========================= */
+
+       //COLLISION RESOLUTION
         if (collisionOn && !attacking) {
             switch (direction) {
                 case "up"    -> { direction = "down";  facing = "down";  }
@@ -172,9 +178,8 @@ public class Parrot extends Entity {
             collisionOn = false;
         }
 
-    /* =========================
-       2. HARD-LOCK STATES
-       ========================= */
+
+       // HARD-LOCK STATES
         if (attacking) {
             speed = 0;
             onPath = false;
@@ -188,9 +193,8 @@ public class Parrot extends Entity {
             return;
         }
 
-    /* =========================
-       3. ATTACK CHECK (TOP PRIORITY)
-       ========================= */
+
+       // ATTACK CHECK
         checkAttackLeftRight(5, gp.tileSize + 10, 10);
 
         if (attacking) {
@@ -202,9 +206,8 @@ public class Parrot extends Entity {
             return;
         }
 
-    /* =========================
-       4. HOSTILE BEHAVIOR
-       ========================= */
+
+       //HOSTILE BEHAVIOR
         if (hostile) {
             flying = true;
             speed = 3;
@@ -213,9 +216,8 @@ public class Parrot extends Entity {
             return;
         }
 
-    /* =========================
-       5. PASSIVE AI DECISIONS
-       ========================= */
+
+       // PASSIVE AI DECISIONS
         onPath = false;
         stateCounter++;
 
@@ -231,7 +233,9 @@ public class Parrot extends Entity {
                     spriteNum = 1;
                     spriteCounter = 0;
                     speed = 0;
-                    gp.playSE(38);
+                    sound.setVolumeByDistance((int) gp.player.worldX, (int) gp.player.worldY, (int) worldX, (int) worldY, soundRange);
+
+                    sound.play();
                     return;
                 }
 
@@ -253,9 +257,8 @@ public class Parrot extends Entity {
             }
         }
 
-    /* =========================
-       6. MOVEMENT
-       ========================= */
+
+       // MOVEMENT
         if (flying) {
             speed = 2;
             getRandomDirection(80);
@@ -272,8 +275,12 @@ public class Parrot extends Entity {
         hostile = true;
         flying = true;
         speed = 3;
+        facing = direction;
         onPath = true;
-        gp.playSE(39);
+
+
+        sound.setFile(39); // screech
+        sound.setVolumeByDistance((int) gp.player.worldX, (int) gp.player.worldY, (int) worldX, (int) worldY, soundRange);
     }
 
 
@@ -386,7 +393,7 @@ public class Parrot extends Entity {
         // ATTACKING
         if(attacking) {
 
-            if(facing.equals("left")) {
+            if(direction.equals("left")) {
                 image = switch(spriteNum) {
                     case 1 -> attackLeft1;
                     case 2 -> attackLeft2;

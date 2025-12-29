@@ -5,6 +5,8 @@ import object.OBJ_Dinar;
 import object.OBJ_Heart;
 import object.OBJ_HungerBar;
 import entity.Player;
+import object.OBJ_Quiver;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -46,6 +48,15 @@ public class UI {
     public int chestSlotRow = 0;
     public boolean cursorOnChest = true;
 
+    //quiver
+    public int quiverSlotRow;
+
+    // ss
+    public String notificationMessage = "";
+    public int notificationCounter = 0;
+    public final int notificationDuration = 120; //2 sec at 60fps
+
+
 
     public Rectangle[] menuBounds = new Rectangle[3]; // 3 menu options
 
@@ -63,6 +74,7 @@ public class UI {
         }
         catch (FontFormatException | IOException e) {
             System.out.println("something wrong with font thing");
+
         }
 
         //CREATE HUD OBJECT
@@ -424,35 +436,95 @@ public class UI {
 
 
     }
+
+    public void drawQuiver() {
+
+        Entity quiver = gp.player.equippedQuiver;
+        if(quiver == null) {
+            gp.gameState = gp.playState;
+            return;
+        }
+
+        int frameX = gp.tileSize * 12;
+        int frameY = gp.tileSize;
+        int frameWidth = gp.tileSize * 2;
+        int frameHeight = gp.tileSize * 5;
+
+        drawSubWindow(frameX, frameY, frameWidth, frameHeight);
+
+        int slotX = frameX + 20;
+        int slotY = frameY + 20;
+        int slotSize = gp.tileSize + 6;
+
+        // Draw arrows
+        for(int i = 0; i < quiver.inventory.size(); i++) {
+
+            Entity arrow = quiver.inventory.get(i);
+
+            g2.drawImage(
+                    arrow.down1,
+                    slotX,
+                    slotY + (i * slotSize),
+                    gp.tileSize,
+                    gp.tileSize,
+                    null
+            );
+
+            if(arrow.amount > 1) {
+                g2.setFont(g2.getFont().deriveFont(28f));
+                g2.setColor(Color.white);
+                g2.drawString(
+                        String.valueOf(arrow.amount),
+                        slotX + gp.tileSize - 10,
+                        slotY + (i * slotSize) + gp.tileSize - 5
+                );
+            }
+        }
+
+        // ---- FIX: clamp FIRST ----
+
+            if(quiverSlotRow < 0) quiverSlotRow = 0;
+            if(quiverSlotRow > 4) quiverSlotRow = 4;
+
+        //DROP ITEM
+        if(gp.keyH.dropKeyPressed ) {
+            gp.ui.dropArrowFromQuiver();
+            gp.keyH.dropKeyPressed = false;
+        }
+
+
+        // Cursor (now safe)
+        int cursorY = slotY + (quiverSlotRow * slotSize);
+
+        g2.setColor(new Color(63,36,16));
+        g2.setStroke(new BasicStroke(3));
+        g2.drawRoundRect(
+                slotX,
+                cursorY,
+                gp.tileSize + 5,
+                gp.tileSize + 5,
+                10,
+                10
+        );
+    }
+
+
     public void dropItem(Entity entity) {
 
-        // Safety: inventory does not exist or empty
-        if(entity.inventory == null || entity.inventory.isEmpty()) {
-            return;
-        }
-
-        // Safety: invalid cursor
-        if(playerSlotCol < 0 || playerSlotRow < 0) {
-            return;
-        }
+        if(entity.inventory == null || entity.inventory.isEmpty()) return;
+        if(playerSlotCol < 0 || playerSlotRow < 0) return;
 
         int itemIndex = getItemIndexOnSlot(playerSlotCol, playerSlotRow);
-
-        // Safety: cursor on empty slot
-        if(itemIndex < 0 || itemIndex >= entity.inventory.size()) {
-            return;
-        }
+        if(itemIndex < 0 || itemIndex >= entity.inventory.size()) return;
 
         Entity item = entity.inventory.get(itemIndex);
 
-        // Safety: cannot drop equipped items
+        // Do not drop equipped gear
         if(item == entity.currentWeapon ||
                 item == entity.currentShield ||
                 item == entity.currentLight) {
             return;
         }
-
-        Entity droppedItem = gp.eGenerator.getObject(item.name);
 
         int worldX = (int) gp.player.worldX;
         int worldY = (int) gp.player.worldY;
@@ -464,22 +536,91 @@ public class UI {
             case "right": worldX += gp.tileSize; break;
         }
 
+        Entity droppedItem;
+
+        // 🔴 CONTAINER ITEMS (QUIVER, BAG, ETC.)
+        if(item.type == gp.player.type_container) {
+
+            droppedItem = item;                // SAME INSTANCE
+            entity.inventory.remove(itemIndex);
+
+            // If player was using this quiver, unequip it
+            if(item == gp.player.equippedQuiver) {
+                gp.player.equippedQuiver = null;
+            }
+
+        }
+        // 🟢 NORMAL ITEMS
+        else {
+            droppedItem = gp.eGenerator.getObject(item.name);
+
+            if(item.amount > 1) {
+                item.amount--;
+            } else {
+                entity.inventory.remove(itemIndex);
+            }
+        }
+
         droppedItem.worldX = worldX;
         droppedItem.worldY = worldY;
 
         for(int i = 0; i < gp.obj[gp.currentMap].length; i++) {
             if(gp.obj[gp.currentMap][i] == null) {
                 gp.obj[gp.currentMap][i] = droppedItem;
+                gp.renderListDirty = true;
+                break;
+            }
+        }
+    }
+
+    public void dropArrowFromQuiver() {
+
+        if(gp.gameState != gp.quiverState) return;
+
+        if(gp.player.equippedQuiver == null ||
+                gp.player.equippedQuiver.inventory == null) return;
+
+        int index = quiverSlotRow;
+
+        if(index < 0 || index >= gp.player.equippedQuiver.inventory.size()) {
+            return;
+        }
+
+        Entity arrow = gp.player.equippedQuiver.inventory.get(index);
+
+        Entity droppedArrow = gp.eGenerator.getObject(arrow.name);
+        droppedArrow.amount = 1;
+        droppedArrow.type = 14;
+        droppedArrow.stackable = true;
+
+        int worldX = (int) gp.player.worldX;
+        int worldY = (int) gp.player.worldY;
+
+        switch(gp.player.direction) {
+            case "up":    worldY -= gp.tileSize; break;
+            case "down":  worldY += gp.tileSize; break;
+            case "left":  worldX -= gp.tileSize; break;
+            case "right": worldX += gp.tileSize; break;
+        }
+
+        droppedArrow.worldX = worldX;
+        droppedArrow.worldY = worldY;
+
+        for(int i = 0; i < gp.obj[gp.currentMap].length; i++) {
+            if(gp.obj[gp.currentMap][i] == null) {
+                gp.obj[gp.currentMap][i] = droppedArrow;
                 break;
             }
         }
 
-        if(item.amount > 1) {
-            item.amount--;
-        } else {
-            entity.inventory.remove(itemIndex);
+        arrow.amount--;
+
+        if(arrow.amount <= 0) {
+            gp.player.equippedQuiver.inventory.remove(index);
         }
     }
+
+
 
     public void drawTransition() {
         counter++;
@@ -1432,11 +1573,34 @@ public class UI {
         message.add(text);
         messageCounter.add(0);
     }
+    public void showNotification(String message) {
+        notificationMessage = message;
+        notificationCounter = notificationDuration;
+    }
+    public void drawNotification(Graphics2D g2) {
+        if(notificationCounter > 0 && !notificationMessage.isEmpty()) {
+            // Set your custom font and size (deriveFont to set size)
+            g2.setFont(maruMonica.deriveFont(Font.BOLD, 20f));
+            g2.setColor(Color.WHITE);
+            int x = gp.screenWidth / 2 - g2.getFontMetrics().stringWidth(notificationMessage) / 2;
+            int y = gp.screenHeight / 5;  // near top
+
+
+
+
+            g2.setColor(Color.WHITE);
+            g2.drawString(notificationMessage, x, y);
+        }
+    }
+
+
     public void draw(Graphics2D g2) {
+
         this.g2 = g2;
         g2.setFont(maruMonica);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);  // Anti Aliasing // Smoothes the text
         g2.setColor(Color.white);
+        drawNotification(g2);
 
         //TITLE STATE
         if(gp.gameState == gp.titleState)
@@ -1498,6 +1662,10 @@ public class UI {
             if(gp.gameState == gp.chestState){
 
                 drawChestScreen();
+            }
+            if(gp.gameState == gp.quiverState){
+
+                drawQuiver();
             }
         }
     }
